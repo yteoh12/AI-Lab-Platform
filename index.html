@@ -1,0 +1,2874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSC3206 AI Lab — CLO Learning Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════
+   DESIGN SYSTEM — Refined Academic Dark
+══════════════════════════════════════════════════ */
+:root {
+  --bg:       #07080f;
+  --surface:  #0e0f1a;
+  --surface2: #141526;
+  --surface3: #1a1b30;
+  --border:   #22243a;
+  --border2:  #2e3050;
+  --text:     #e4e5f0;
+  --muted:    #5c5e80;
+  --muted2:   #8b8db0;
+
+  /* CLO colours — each outcome has its own identity */
+  --clo1:     #38bdf8;  /* sky — evaluate/think */
+  --clo1-bg:  rgba(56,189,248,.07);
+  --clo2:     #34d399;  /* emerald — implement/do */
+  --clo2-bg:  rgba(52,211,153,.07);
+  --clo3:     #f59e0b;  /* amber — construct/create */
+  --clo3-bg:  rgba(245,158,11,.07);
+
+  --prelab:   #a78bfa;  /* violet — prepare */
+  --prelab-bg:rgba(167,139,250,.07);
+  --post:     #f472b6;  /* pink — reflect */
+  --post-bg:  rgba(244,114,182,.07);
+
+  --danger:   #f87171;
+  --success:  #34d399;
+  --warn:     #fbbf24;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box }
+html { scroll-behavior: smooth }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid texture */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(56,189,248,.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56,189,248,.015) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+/* Atmospheric glows */
+.glow-1, .glow-2 {
+  position: fixed; border-radius: 50%; pointer-events: none; z-index: 0;
+  filter: blur(80px);
+}
+.glow-1 { width:600px; height:600px; top:-200px; left:-150px;
+  background: radial-gradient(circle, rgba(56,189,248,.05) 0%, transparent 70%); }
+.glow-2 { width:500px; height:500px; bottom:-200px; right:-100px;
+  background: radial-gradient(circle, rgba(167,139,250,.04) 0%, transparent 70%); }
+
+/* ── LAYOUT ── */
+.shell { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 290px; flex-shrink: 0;
+  background: rgba(14,15,26,.97);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  position: fixed; left:0; top:0; bottom:0;
+  overflow-y: auto; z-index: 20;
+  backdrop-filter: blur(16px);
+}
+
+.sb-brand {
+  padding: 24px 20px 18px;
+  border-bottom: 1px solid var(--border);
+}
+.sb-tag {
+  font-size: 8px; letter-spacing: .35em; color: var(--clo1);
+  text-transform: uppercase; margin-bottom: 5px; font-weight: 500;
+}
+.sb-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px; font-weight: 800; color: var(--text); line-height: 1.15;
+}
+.sb-sub { font-size: 9px; color: var(--muted2); margin-top: 3px; line-height: 1.5 }
+
+/* Student card */
+.sb-student {
+  margin: 14px 14px 0;
+  padding: 12px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  position: relative; overflow: hidden;
+}
+.sb-student::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--clo1), var(--clo2), var(--clo3));
+}
+.sb-sid { font-size: 9px; color: var(--muted); letter-spacing: .1em; margin-bottom: 5px }
+.sb-name-row { display: flex; align-items: center; gap: 8px }
+.sb-avatar {
+  width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--clo1), var(--prelab));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 800;
+  color: var(--bg);
+}
+.sb-name { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--text) }
+.sb-prog { font-size: 9px; color: var(--muted2); margin-top: 1px }
+
+/* CLO Progress mini-bars */
+.clo-bars {
+  margin: 10px 14px 0;
+  padding: 11px 13px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.clo-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px }
+.clo-bar-row:last-child { margin-bottom: 0 }
+.clo-bar-label {
+  font-size: 9px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  min-width: 36px;
+}
+.clo-bar-track {
+  flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden;
+}
+.clo-bar-fill { height: 100%; border-radius: 3px; transition: width .8s cubic-bezier(.4,0,.2,1) }
+.clo-bar-pct { font-size: 9px; min-width: 28px; text-align: right }
+
+/* Nav */
+.sb-nav { padding: 10px 8px; flex: 1 }
+.sb-nav-label {
+  font-size: 8px; letter-spacing: .22em; color: var(--muted);
+  text-transform: uppercase; padding: 10px 8px 5px;
+}
+.sb-nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; border-radius: 6px; cursor: pointer;
+  transition: all .15s; margin-bottom: 1px;
+  border: 1px solid transparent; position: relative;
+}
+.sb-nav-item:hover { background: var(--surface2) }
+.sb-nav-item.active {
+  background: rgba(56,189,248,.07);
+  border-color: rgba(56,189,248,.14);
+}
+.nav-num {
+  font-size: 9px; color: var(--muted); background: var(--border);
+  border-radius: 3px; padding: 2px 5px; min-width: 38px; text-align: center;
+  transition: all .15s;
+}
+.sb-nav-item.active .nav-num { color: var(--clo1); background: rgba(56,189,248,.12) }
+.nav-label { font-size: 11px; color: var(--text); flex: 1; line-height: 1.25 }
+.sb-nav-item.active .nav-label { color: var(--clo1) }
+.nav-status {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--border); flex-shrink: 0;
+}
+.nav-status.done { background: var(--clo2); box-shadow: 0 0 5px var(--clo2) }
+.nav-status.partial { background: var(--warn); box-shadow: 0 0 5px var(--warn); animation: blink 2s infinite }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* Sidebar footer */
+.sb-footer {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px;
+}
+
+/* ── MAIN ── */
+.main {
+  margin-left: 290px; flex: 1;
+  display: flex; flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Topbar */
+.topbar {
+  padding: 14px 32px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(7,8,15,.92); backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 10;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px }
+.breadcrumb { font-size: 11px; color: var(--muted) }
+.breadcrumb span { color: var(--clo1) }
+.topbar-right { display: flex; gap: 8px; align-items: center }
+
+/* Buttons */
+.btn {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  padding: 7px 14px; border-radius: 5px; cursor: pointer;
+  transition: all .15s; border: none; letter-spacing: .03em;
+  font-weight: 500;
+}
+.btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--muted) }
+.btn-ghost:hover { border-color: var(--clo1); color: var(--clo1) }
+.btn-primary {
+  background: linear-gradient(135deg, var(--clo1), rgba(56,189,248,.65));
+  color: var(--bg); font-weight: 700;
+}
+.btn-primary:hover { opacity: .85; transform: translateY(-1px) }
+.btn-export {
+  background: rgba(52,211,153,.1); border: 1px solid rgba(52,211,153,.22);
+  color: var(--clo2);
+}
+.btn-export:hover { background: rgba(52,211,153,.18) }
+.btn-analytics {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.22);
+  color: var(--prelab);
+}
+.btn-analytics:hover { background: rgba(167,139,250,.18) }
+.mob-btn {
+  display: none; background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); padding: 5px 9px; border-radius: 5px; cursor: pointer; font-size: 14px;
+}
+
+/* Content area */
+.content { padding: 28px 32px; flex: 1 }
+
+/* Lab Header */
+.lab-header {
+  display: flex; align-items: flex-start; gap: 20px;
+  margin-bottom: 20px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.lab-num-badge {
+  font-family: 'Syne', sans-serif; font-size: 52px; font-weight: 800;
+  color: var(--clo1); opacity: .08; line-height: 1; min-width: 70px; text-align: right;
+}
+.lab-meta-block { flex: 1 }
+.lab-cat {
+  font-size: 9px; letter-spacing: .25em; color: var(--prelab);
+  text-transform: uppercase; margin-bottom: 5px;
+}
+.lab-title {
+  font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800;
+  color: var(--text); line-height: 1.2; margin-bottom: 8px;
+}
+.lab-chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center }
+.chip {
+  font-size: 9px; padding: 3px 8px; border-radius: 3px;
+  font-weight: 600; letter-spacing: .07em; text-transform: uppercase;
+  border: 1px solid;
+}
+.chip-clo1 { color: var(--clo1); border-color: rgba(56,189,248,.25); background: var(--clo1-bg) }
+.chip-clo2 { color: var(--clo2); border-color: rgba(52,211,153,.25); background: var(--clo2-bg) }
+.chip-clo3 { color: var(--clo3); border-color: rgba(245,158,11,.25); background: var(--clo3-bg) }
+.chip-week { color: var(--muted2); border-color: var(--border); background: var(--surface2) }
+.chip-src  { color: var(--prelab); border-color: rgba(167,139,250,.2); background: var(--prelab-bg) }
+.chip-src a { color: inherit; text-decoration: none }
+
+/* ── CLO SECTION WRAPPER ── */
+.clo-section {
+  border: 1px solid var(--border);
+  border-radius: 12px; overflow: hidden;
+  margin-bottom: 16px;
+  transition: border-color .2s;
+}
+.clo-section:focus-within { border-color: var(--border2) }
+
+.clo-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 18px; cursor: pointer;
+  user-select: none; transition: background .15s;
+}
+.clo-header:hover { background: rgba(255,255,255,.015) }
+
+.clo-icon {
+  width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.section-prelab .clo-icon { background: var(--prelab-bg); border: 1px solid rgba(167,139,250,.2) }
+.section-clo1   .clo-icon { background: var(--clo1-bg);   border: 1px solid rgba(56,189,248,.2)  }
+.section-clo2   .clo-icon { background: var(--clo2-bg);   border: 1px solid rgba(52,211,153,.2)  }
+.section-clo3   .clo-icon { background: var(--clo3-bg);   border: 1px solid rgba(245,158,11,.2)  }
+.section-post   .clo-icon { background: var(--post-bg);   border: 1px solid rgba(244,114,182,.2) }
+
+.section-prelab { background: var(--surface) }
+.section-clo1   { background: var(--surface) }
+.section-clo2   { background: var(--surface) }
+.section-clo3   { background: var(--surface) }
+.section-post   { background: var(--surface) }
+
+.clo-header-info { flex: 1 }
+.clo-tag-row { display: flex; align-items: center; gap: 8px; margin-bottom: 3px }
+.clo-tag {
+  font-size: 8px; padding: 2px 7px; border-radius: 2px;
+  font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+}
+.section-prelab .clo-tag { background: var(--prelab-bg); color: var(--prelab) }
+.section-clo1   .clo-tag { background: var(--clo1-bg);   color: var(--clo1)   }
+.section-clo2   .clo-tag { background: var(--clo2-bg);   color: var(--clo2)   }
+.section-clo3   .clo-tag { background: var(--clo3-bg);   color: var(--clo3)   }
+.section-post   .clo-tag { background: var(--post-bg);   color: var(--post)   }
+
+.clo-bloom {
+  font-size: 8px; color: var(--muted); letter-spacing: .06em;
+}
+.clo-title {
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--text);
+}
+.clo-subtitle { font-size: 10px; color: var(--muted2); line-height: 1.5 }
+.clo-chevron { font-size: 11px; color: var(--muted); transition: transform .2s }
+.clo-section.open .clo-chevron { transform: rotate(90deg) }
+.clo-status-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--border);
+}
+.clo-status-dot.filled { background: var(--clo2); box-shadow: 0 0 6px var(--clo2) }
+
+.clo-body {
+  padding: 0 18px 18px;
+  display: none;
+  border-top: 1px solid var(--border);
+}
+.clo-section.open .clo-body { display: block; animation: slideIn .2s ease }
+@keyframes slideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── INPUT COMPONENTS ── */
+.form-group { margin-top: 16px }
+.form-label {
+  font-size: 10px; color: var(--muted2); letter-spacing: .07em;
+  text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;
+}
+.form-label .req { color: var(--danger); font-size: 10px }
+.form-label .clo-badge {
+  font-size: 8px; padding: 1px 6px; border-radius: 2px; font-weight: 700; letter-spacing: .1em;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); font-family: 'DM Mono', monospace;
+  font-size: 12px; padding: 9px 12px; transition: border-color .15s; outline: none;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: rgba(56,189,248,.4); background: var(--surface3);
+}
+.form-input::placeholder, .form-textarea::placeholder { color: var(--muted) }
+.form-select option { background: var(--surface2) }
+.form-textarea { resize: vertical; min-height: 80px; line-height: 1.7 }
+.code-textarea {
+  font-family: 'DM Mono', monospace; font-size: 11.5px;
+  background: #03040a; border: 1px solid var(--border);
+  min-height: 120px; line-height: 1.8; tab-size: 4;
+}
+.code-textarea:focus { border-color: rgba(52,211,153,.35) }
+
+/* ── CONFIDENCE EMOJI SCALE ── */
+.emoji-scale {
+  display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+}
+.emoji-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 10px 14px; border-radius: 8px; cursor: pointer;
+  background: var(--surface2); border: 1px solid var(--border);
+  transition: all .2s; min-width: 60px;
+}
+.emoji-btn:hover { border-color: var(--border2); transform: translateY(-2px) }
+.emoji-btn.selected {
+  border-color: var(--clo1); background: rgba(56,189,248,.08);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(56,189,248,.15);
+}
+.emoji-btn .emoji { font-size: 22px }
+.emoji-btn .emoji-label { font-size: 9px; color: var(--muted); letter-spacing: .04em }
+
+/* Confidence comparison display */
+.confidence-compare {
+  display: flex; align-items: center; gap: 12px; margin-top: 10px;
+  padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.conf-item { text-align: center; flex: 1 }
+.conf-label { font-size: 9px; color: var(--muted); margin-bottom: 4px; letter-spacing: .08em; text-transform: uppercase }
+.conf-emoji { font-size: 24px }
+.conf-arrow { font-size: 20px; color: var(--muted) }
+.conf-delta {
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+  padding: 2px 8px; border-radius: 4px;
+}
+.conf-delta.up { color: var(--clo2); background: var(--clo2-bg) }
+.conf-delta.down { color: var(--danger); background: rgba(248,113,113,.08) }
+.conf-delta.same { color: var(--muted); background: var(--surface3) }
+
+/* ── DIFFICULTY SELECTOR ── */
+.difficulty-row { display: flex; gap: 6px; margin-top: 6px }
+.diff-btn {
+  flex: 1; padding: 7px 4px; border-radius: 5px; cursor: pointer; text-align: center;
+  font-size: 10px; letter-spacing: .05em;
+  background: var(--surface2); border: 1px solid var(--border);
+  transition: all .15s; color: var(--muted);
+}
+.diff-btn:hover { border-color: var(--border2) }
+.diff-btn.sel-easy   { background: var(--clo2-bg); border-color: rgba(52,211,153,.3); color: var(--clo2) }
+.diff-btn.sel-medium { background: rgba(251,191,36,.07); border-color: rgba(251,191,36,.3); color: var(--warn) }
+.diff-btn.sel-hard   { background: rgba(248,113,113,.07); border-color: rgba(248,113,113,.3); color: var(--danger) }
+
+/* ── METHOD SELECTOR (CLO1) ── */
+.method-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-top: 8px }
+.method-card {
+  padding: 12px 13px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 7px; cursor: pointer; transition: all .2s;
+}
+.method-card:hover { border-color: var(--border2); transform: translateY(-1px) }
+.method-card.selected {
+  border-color: var(--clo1); background: var(--clo1-bg);
+  box-shadow: 0 4px 12px rgba(56,189,248,.12);
+}
+.method-name {
+  font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+  color: var(--text); margin-bottom: 3px;
+}
+.method-card.selected .method-name { color: var(--clo1) }
+.method-desc { font-size: 10px; color: var(--muted); line-height: 1.4 }
+
+/* ── OUTPUT SUCCESS/FAIL ── */
+.run-status-row { display: flex; gap: 8px; margin-top: 8px }
+.run-status-btn {
+  flex: 1; padding: 8px; border-radius: 5px; cursor: pointer; text-align: center;
+  font-size: 11px; background: var(--surface2); border: 1px solid var(--border);
+  transition: all .15s; color: var(--muted);
+}
+.run-status-btn.sel-success {
+  background: var(--clo2-bg); border-color: rgba(52,211,153,.3); color: var(--clo2);
+}
+.run-status-btn.sel-fail {
+  background: rgba(248,113,113,.07); border-color: rgba(248,113,113,.3); color: var(--danger);
+}
+.run-status-btn.sel-partial {
+  background: rgba(251,191,36,.07); border-color: rgba(251,191,36,.3); color: var(--warn);
+}
+
+/* ── SECTION SAVE BUTTON ── */
+.section-save-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+  flex-wrap: wrap; gap: 10px;
+}
+.save-status { font-size: 10px; color: var(--muted); display: flex; align-items: center; gap: 6px }
+.save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--clo2); box-shadow: 0 0 5px var(--clo2) }
+.btn-save {
+  background: var(--clo2-bg); border: 1px solid rgba(52,211,153,.25);
+  color: var(--clo2); font-family: 'DM Mono', monospace;
+  font-size: 11px; padding: 7px 16px; border-radius: 5px;
+  cursor: pointer; transition: all .15s; font-weight: 500;
+}
+.btn-save:hover { background: rgba(52,211,153,.15) }
+
+/* ── MICROSOFT FORMS EMBED ── */
+.forms-section {
+  margin-top: 16px; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
+.forms-header {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(90deg, rgba(56,189,248,.04), transparent);
+}
+.forms-icon { font-size: 16px }
+.forms-title { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--text) }
+.forms-sub { font-size: 10px; color: var(--muted) }
+.forms-iframe-wrap { position: relative; padding-bottom: 0 }
+.forms-iframe-wrap iframe {
+  width: 100%; height: 480px; border: none; display: block;
+}
+.forms-placeholder {
+  padding: 32px; text-align: center;
+}
+.forms-placeholder-icon { font-size: 32px; margin-bottom: 10px }
+.forms-placeholder-text { font-size: 12px; color: var(--muted); line-height: 1.7 }
+.forms-url-input {
+  margin-top: 12px; display: flex; gap: 8px;
+}
+.forms-url-input input {
+  flex: 1; background: var(--surface3); border: 1px solid var(--border);
+  border-radius: 5px; color: var(--text); font-family: 'DM Mono', monospace;
+  font-size: 11px; padding: 7px 11px; outline: none;
+}
+.forms-url-input input:focus { border-color: rgba(56,189,248,.3) }
+
+/* ── CODE BLOCK ── */
+.code-block {
+  background: #03040a; border: 1px solid var(--border); border-radius: 7px;
+  overflow: hidden; margin: 10px 0;
+}
+.code-header {
+  padding: 7px 13px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--surface2);
+}
+.code-lang { font-size: 9px; color: var(--clo2); letter-spacing: .12em; text-transform: uppercase }
+.code-copy {
+  font-size: 10px; color: var(--muted); cursor: pointer; background: none;
+  border: 1px solid var(--border); padding: 2px 8px; border-radius: 3px;
+  font-family: 'DM Mono', monospace; transition: all .15s;
+}
+.code-copy:hover { color: var(--clo1); border-color: var(--clo1) }
+pre { padding: 14px; overflow-x: auto; font-size: 11.5px; line-height: 1.75; color: #c0caf5 }
+.kw{color:#bb9af7}.fn{color:#7dcfff}.str{color:#9ece6a}.cm{color:#414868;font-style:italic}.num{color:#ff9e64}.cls{color:#e0af68}
+
+/* Info boxes */
+.info-box { padding: 11px 14px; border-radius: 6px; margin: 10px 0; font-size: 12px; line-height: 1.7 }
+.info-box.note { background: var(--clo1-bg); border-left: 3px solid var(--clo1) }
+.info-box.tip  { background: var(--clo2-bg); border-left: 3px solid var(--clo2) }
+.info-box.warn { background: rgba(251,191,36,.05); border-left: 3px solid var(--warn) }
+.ib-label { font-size: 9px; letter-spacing: .16em; font-weight: 700; margin-bottom: 4px; text-transform: uppercase }
+.info-box.note .ib-label { color: var(--clo1) }
+.info-box.tip  .ib-label { color: var(--clo2) }
+.info-box.warn .ib-label { color: var(--warn) }
+
+/* Prose */
+.prose { font-size: 12px; color: var(--muted2); line-height: 1.85; margin-bottom: 10px }
+.prose strong { color: var(--text) }
+.prose code { background: rgba(56,189,248,.07); color: var(--clo1); padding: 1px 5px; border-radius: 3px; font-size: 11px }
+
+/* Numbered list */
+.n-list { display: flex; flex-direction: column; gap: 7px; margin: 10px 0 }
+.n-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px }
+.n-num { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; color: var(--prelab); min-width: 18px; padding-top: 1px }
+.n-text { font-size: 12px; color: var(--text); line-height: 1.6; flex: 1 }
+.n-text code { background: rgba(56,189,248,.07); color: var(--clo1); padding: 1px 4px; border-radius: 2px; font-size: 11px }
+
+/* ── PROGRESS OVERVIEW TAB ── */
+.progress-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px }
+.prog-card {
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  padding: 13px; cursor: pointer; transition: all .2s;
+}
+.prog-card:hover { transform: translateY(-2px); border-color: var(--border2) }
+.prog-card.done { border-color: rgba(52,211,153,.2) }
+.prog-card.active { border-color: rgba(56,189,248,.25); background: rgba(56,189,248,.03) }
+.pc-num { font-size: 9px; color: var(--muted); letter-spacing: .14em; margin-bottom: 5px; text-transform: uppercase }
+.pc-title { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 8px; line-height: 1.3 }
+.pc-clo-pills { display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 8px }
+.pc-pill { font-size: 8px; padding: 1px 5px; border-radius: 2px; font-weight: 700 }
+.pc-pill.c1 { background: var(--clo1-bg); color: var(--clo1) }
+.pc-pill.c2 { background: var(--clo2-bg); color: var(--clo2) }
+.pc-pill.c3 { background: var(--clo3-bg); color: var(--clo3) }
+.pc-bar { height: 3px; background: var(--border); border-radius: 2px; overflow: hidden }
+.pc-bar-fill { height: 100%; border-radius: 2px; transition: width .8s }
+.prog-card.done .pc-bar-fill { background: var(--clo2) }
+.prog-card.active .pc-bar-fill { background: var(--clo1) }
+.prog-card:not(.done):not(.active) .pc-bar-fill { background: var(--border) }
+.pc-pct { font-size: 10px; color: var(--muted); margin-top: 5px }
+.prog-card.done .pc-pct { color: var(--clo2) }
+.prog-card.active .pc-pct { color: var(--clo1) }
+
+/* CLO attainment overview */
+.clo-attain-grid {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;
+}
+.clo-attain-card {
+  padding: 16px; border-radius: 10px; text-align: center; border: 1px solid;
+}
+.clo-attain-card.c1 { background: var(--clo1-bg); border-color: rgba(56,189,248,.2) }
+.clo-attain-card.c2 { background: var(--clo2-bg); border-color: rgba(52,211,153,.2) }
+.clo-attain-card.c3 { background: var(--clo3-bg); border-color: rgba(245,158,11,.2) }
+.clo-attain-num {
+  font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800;
+}
+.c1 .clo-attain-num { color: var(--clo1) }
+.c2 .clo-attain-num { color: var(--clo2) }
+.c3 .clo-attain-num { color: var(--clo3) }
+.clo-attain-label { font-size: 10px; color: var(--muted2); margin-top: 3px; letter-spacing: .05em }
+.clo-attain-bar-outer { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 8px }
+.clo-attain-bar-fill { height: 100%; border-radius: 3px; transition: width 1s }
+.c1 .clo-attain-bar-fill { background: var(--clo1) }
+.c2 .clo-attain-bar-fill { background: var(--clo2) }
+.c3 .clo-attain-bar-fill { background: var(--clo3) }
+
+/* Stat cards */
+.stat-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-bottom: 20px }
+.stat-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 13px; text-align: center }
+.stat-val { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800 }
+.stat-lbl { font-size: 9px; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; margin-top: 3px }
+
+/* Section title */
+.sec-title {
+  font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+  color: var(--text); margin-bottom: 12px; padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.sec-title::before { content: ''; width: 3px; height: 14px; border-radius: 2px; background: currentColor }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 8px 0 }
+th {
+  background: var(--surface2); color: var(--muted2); font-size: 9px;
+  letter-spacing: .1em; text-transform: uppercase; padding: 8px 12px;
+  text-align: left; border-bottom: 1px solid var(--border); font-weight: 600;
+}
+td { padding: 9px 12px; border-bottom: 1px solid rgba(34,36,58,.8); color: var(--text); vertical-align: middle }
+tr:last-child td { border-bottom: none }
+tr:hover td { background: rgba(255,255,255,.01) }
+
+/* Tab system */
+.tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px }
+.tab {
+  padding: 8px 16px; font-size: 11px; cursor: pointer; color: var(--muted);
+  border-bottom: 2px solid transparent; transition: all .15s; letter-spacing: .04em;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--text) }
+.tab.active { color: var(--clo1); border-bottom-color: var(--clo1) }
+
+.tab-content { display: none }
+.tab-content.active { display: block; animation: fadeUp .22s ease }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 22px; right: 22px; z-index: 200;
+  background: var(--surface2); border: 1px solid var(--clo2); border-radius: 8px;
+  padding: 11px 16px; font-size: 12px; color: var(--clo2);
+  display: flex; align-items: center; gap: 8px;
+  transform: translateY(70px); opacity: 0;
+  transition: all .3s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.toast.show { transform: translateY(0); opacity: 1 }
+
+/* Misconception flag */
+.flag-misconception {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 9px; padding: 2px 7px; border-radius: 10px;
+  background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.25);
+  color: var(--danger); letter-spacing: .06em; font-weight: 600;
+}
+
+/* Divider */
+.divider { height: 1px; background: var(--border); margin: 16px 0 }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px }
+::-webkit-scrollbar-track { background: var(--bg) }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px }
+
+/* Responsive */
+@media (max-width: 960px) {
+  .sidebar { transform: translateX(-100%); transition: transform .3s }
+  .sidebar.open { transform: translateX(0) }
+  .main { margin-left: 0 }
+  .content { padding: 20px 16px }
+  .mob-btn { display: block }
+  .clo-attain-grid { grid-template-columns: 1fr }
+  .method-grid { grid-template-columns: 1fr 1fr }
+}
+code { background: rgba(56,189,248,.07); color: var(--clo1); padding: 1px 5px; border-radius: 3px; font-size: 11px }
+
+/* ── MANUAL TAB STYLES ── */
+.manual-section { margin-bottom: 22px }
+.manual-sec-title {
+  font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: var(--text);
+  margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.manual-sec-title::before { content: ''; width: 3px; height: 14px; border-radius: 2px; background: var(--clo1); flex-shrink: 0 }
+.manual-prose { font-size: 12px; color: var(--muted2); line-height: 1.9; margin-bottom: 10px }
+.manual-prose strong { color: var(--text) }
+.manual-prose code { background: rgba(56,189,248,.07); color: var(--clo1); padding: 1px 5px; border-radius: 3px; font-size: 11px }
+.manual-note { padding: 11px 14px; background: var(--clo1-bg); border-left: 3px solid var(--clo1); border-radius: 6px; margin: 10px 0; font-size: 12px; line-height: 1.7 }
+.manual-note .mn-label { font-size: 9px; letter-spacing: .16em; color: var(--clo1); font-weight: 700; text-transform: uppercase; margin-bottom: 4px }
+.manual-tip  { padding: 11px 14px; background: var(--clo2-bg); border-left: 3px solid var(--clo2); border-radius: 6px; margin: 10px 0; font-size: 12px; line-height: 1.7 }
+.manual-tip  .mn-label { font-size: 9px; letter-spacing: .16em; color: var(--clo2); font-weight: 700; text-transform: uppercase; margin-bottom: 4px }
+.manual-task { padding: 11px 14px; background: var(--clo3-bg); border-left: 3px solid var(--clo3); border-radius: 6px; margin: 10px 0; font-size: 12px; line-height: 1.7 }
+.manual-task .mn-label { font-size: 9px; letter-spacing: .16em; color: var(--clo3); font-weight: 700; text-transform: uppercase; margin-bottom: 4px }
+.manual-cb { padding: 11px 14px; background: rgba(167,139,250,.05); border-left: 3px solid var(--prelab); border-radius: 6px; margin: 10px 0; font-size: 12px; line-height: 1.7 }
+.manual-cb .mn-label { font-size: 9px; letter-spacing: .16em; color: var(--prelab); font-weight: 700; text-transform: uppercase; margin-bottom: 4px }
+.manual-steps { display: flex; flex-direction: column; gap: 7px; margin: 10px 0 }
+.manual-step { display: flex; gap: 11px; align-items: flex-start; padding: 10px 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px }
+.ms-num { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 700; color: var(--prelab); min-width: 18px; padding-top: 1px; flex-shrink: 0 }
+.ms-text { font-size: 12px; color: var(--text); line-height: 1.65; flex: 1 }
+.ms-text code { background: rgba(56,189,248,.07); color: var(--clo1); padding: 1px 4px; border-radius: 2px; font-size: 11px }
+.ms-text strong { color: var(--text) }
+.manual-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin: 10px 0 }
+.manual-table th { background: var(--surface2); color: var(--muted2); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; padding: 7px 11px; text-align: left; border-bottom: 1px solid var(--border); font-weight: 600 }
+.manual-table td { padding: 7px 11px; border-bottom: 1px solid rgba(34,36,58,.8); color: var(--text); vertical-align: top }
+.manual-table td code { color: var(--clo2); font-size: 11px }
+.manual-table tr:last-child td { border-bottom: none }
+</style>
+</head>
+<body>
+
+<div class="glow-1"></div>
+<div class="glow-2"></div>
+
+<!-- ════════════════════════════════════════
+     SHELL
+════════════════════════════════════════ -->
+<div class="shell">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-tag">// CSC3206 · SCAI · FET</div>
+    <div class="sb-title">AI Lab<br>Platform</div>
+    <div class="sb-sub">Sunway University<br>CLO-Driven Learning Analytics</div>
+  </div>
+
+  <div class="sb-student">
+    <div class="sb-sid">STUDENT</div>
+    <div class="sb-name-row">
+      <div class="sb-avatar" id="sb-avatar">?</div>
+      <div>
+        <div class="sb-name" id="sb-name">Enter your name →</div>
+        <div class="sb-prog" id="sb-prog">Student ID not set</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLO Progress bars -->
+  <div class="clo-bars" id="clo-bars">
+    <div class="clo-bar-row">
+      <div class="clo-bar-label" style="color:var(--clo1)">CLO1</div>
+      <div class="clo-bar-track"><div class="clo-bar-fill" id="bar-clo1" style="width:0%;background:var(--clo1)"></div></div>
+      <div class="clo-bar-pct" id="pct-clo1" style="color:var(--clo1)">0%</div>
+    </div>
+    <div class="clo-bar-row">
+      <div class="clo-bar-label" style="color:var(--clo2)">CLO2</div>
+      <div class="clo-bar-track"><div class="clo-bar-fill" id="bar-clo2" style="width:0%;background:var(--clo2)"></div></div>
+      <div class="clo-bar-pct" id="pct-clo2" style="color:var(--clo2)">0%</div>
+    </div>
+    <div class="clo-bar-row">
+      <div class="clo-bar-label" style="color:var(--clo3)">CLO3</div>
+      <div class="clo-bar-track"><div class="clo-bar-fill" id="bar-clo3" style="width:0%;background:var(--clo3)"></div></div>
+      <div class="clo-bar-pct" id="pct-clo3" style="color:var(--clo3)">0%</div>
+    </div>
+  </div>
+
+  <nav class="sb-nav" id="sb-nav">
+    <div class="sb-nav-label">// Lab Sessions</div>
+    <!-- Rendered by JS -->
+  </nav>
+
+  <div class="sb-footer">
+    <button class="btn btn-export" style="flex:1;font-size:10px" onclick="exportData()">⬇ Export CSV</button>
+    <button class="btn btn-analytics" style="flex:1;font-size:10px" onclick="window.open('analytics.html','_blank')">📊 Analytics</button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="mob-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <div class="breadcrumb">CSC3206 / <span id="crumb">Overview</span></div>
+    </div>
+    <div class="topbar-right">
+      <span id="lab-status-chip"></span>
+      <button class="btn btn-ghost" onclick="switchMainTab('progress')" style="font-size:10px">📊 Progress</button>
+      <button class="btn btn-primary" id="complete-btn" onclick="completeCurrentLab()" style="display:none">Mark Complete ✓</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Lab Header -->
+    <div class="lab-header">
+      <div class="lab-num-badge" id="lab-num-big">00</div>
+      <div class="lab-meta-block">
+        <div class="lab-cat" id="lab-cat">Course Learning Outcomes Platform</div>
+        <div class="lab-title" id="lab-title-main">Welcome — AI Lab Portal</div>
+        <div class="lab-chips" id="lab-chips"></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchMainTab('lab')">🔬 Lab</div>
+      <div class="tab" onclick="switchMainTab('manual')">📖 Manual</div>
+      <div class="tab" onclick="switchMainTab('progress')">📈 Progress</div>
+      <div class="tab" onclick="switchMainTab('export')">⬇ Export</div>
+    </div>
+
+    <!-- TAB: LAB CONTENT -->
+    <div class="tab-content active" id="tab-lab">
+      <div id="lab-sections">
+        <!-- Rendered dynamically -->
+        <div style="text-align:center;padding:40px 0;color:var(--muted)">
+          <div style="font-size:32px;margin-bottom:12px">🧠</div>
+          <div style="font-family:'Syne',sans-serif;font-size:16px;color:var(--text);margin-bottom:8px">Select a lab from the sidebar</div>
+          <div style="font-size:12px">Each lab follows the CLO framework: Pre-Lab → CLO1 → CLO2 → CLO3 → Post-Lab</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: MANUAL -->
+    <div class="tab-content" id="tab-manual">
+      <div id="manual-content">
+        <div style="text-align:center;padding:40px 0;color:var(--muted)">
+          <div style="font-size:32px;margin-bottom:12px">📖</div>
+          <div style="font-family:'Syne',sans-serif;font-size:16px;color:var(--text);margin-bottom:8px">Select a lab to view the manual</div>
+          <div style="font-size:12px">Full step-by-step lab content with code examples from yteoh12.github.io/ai-labs</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: PROGRESS -->
+    <div class="tab-content" id="tab-progress">
+      <div class="clo-attain-grid" id="clo-attain"></div>
+      <div class="stat-row" id="stat-row"></div>
+      <div class="sec-title" style="color:var(--clo1)">Lab Progress</div>
+      <div class="progress-grid" id="progress-grid"></div>
+      <div class="divider"></div>
+      <div class="sec-title" style="color:var(--prelab);margin-top:16px">Confidence Tracking</div>
+      <div id="confidence-chart"></div>
+      <div class="divider"></div>
+      <div class="sec-title" style="color:var(--danger);margin-top:16px">⚠ Misconception Flags</div>
+      <div id="misconception-list"></div>
+    </div>
+
+    <!-- TAB: EXPORT -->
+    <div class="tab-content" id="tab-export">
+      <div class="sec-title" style="color:var(--clo2)">Data Export for Analytics</div>
+      <p class="prose" style="margin-bottom:16px">All collected data can be exported for Microsoft Excel, Power BI, or research analysis. Data includes cognitive, affective, and behavioural dimensions.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px">
+          <div style="font-size:20px;margin-bottom:10px">📊</div>
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px">Full Dataset CSV</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">All submissions across all labs. Ready for Excel pivot tables or Power BI import.</div>
+          <button class="btn btn-export" onclick="exportData('csv')" style="width:100%">⬇ Export All Data (CSV)</button>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px">
+          <div style="font-size:20px;margin-bottom:10px">🔗</div>
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px">JSON Export</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">Structured JSON for programmatic analysis, research pipelines, or custom dashboards.</div>
+          <button class="btn btn-analytics" onclick="exportData('json')" style="width:100%">⬇ Export JSON</button>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px">
+          <div style="font-size:20px;margin-bottom:10px">📋</div>
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px">CLO Attainment Report</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">Per-lab CLO completion rates. Suitable for accreditation reporting.</div>
+          <button class="btn btn-export" onclick="exportCLOReport()" style="width:100%">⬇ CLO Report CSV</button>
+        </div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px">
+          <div style="font-size:20px;margin-bottom:10px">😊</div>
+          <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:6px">Affective Data CSV</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">Confidence before/after, satisfaction scores per lab. For affective domain analysis.</div>
+          <button class="btn btn-ghost" onclick="exportAffective()" style="width:100%">⬇ Affective Data CSV</button>
+        </div>
+      </div>
+      <div class="info-box note"><div class="ib-label">// Power BI Integration</div>
+      Export the full dataset CSV and import directly into Power BI via <strong>Get Data → Text/CSV</strong>. Recommended columns for slicers: <code>lab_id</code>, <code>clo_tag</code>, <code>confidence_before</code>, <code>confidence_after</code>, <code>completed</code>.
+      </div>
+      <div class="info-box tip"><div class="ib-label">// Microsoft Forms</div>
+      Each lab section links to a Microsoft Form for backup data collection. Form responses automatically populate a SharePoint/Excel spreadsheet, which can be connected to Power BI via live data refresh.
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /shell -->
+
+<div class="toast" id="toast"><span>✓</span><span id="toast-msg"></span></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// DATA LAYER — localStorage persistence
+// ══════════════════════════════════════════════════════════════
+const STORE_KEY = 'csc3206_ailab_v2';
+let DB = JSON.parse(localStorage.getItem(STORE_KEY) || 'null') || {
+  student: { name: '', id: '', programme: '' },
+  submissions: {},   // keyed by labId
+  meta: { started: Date.now() }
+};
+function saveDB() { localStorage.setItem(STORE_KEY, JSON.stringify(DB)); }
+
+function getSubmission(labId) {
+  if (!DB.submissions[labId]) {
+    DB.submissions[labId] = {
+      labId, completed: false, started_at: Date.now(), completed_at: null,
+      prelab:  { confidence_before: null, prior_knowledge: '' },
+      clo1:    { method: null, justification: '', confidence: null, saved: false },
+      clo2:    { code: '', output: '', status: null, difficulty: null, saved: false },
+      clo3:    { script: '', approach: '', reflection: '', saved: false },
+      postlab: { confidence_after: null, satisfaction: null, reflection: '', saved: false },
+      forms_submitted: false
+    };
+  }
+  return DB.submissions[labId];
+}
+
+// ══════════════════════════════════════════════════════════════
+// LAB DATA — All 9 labs + Getting Started
+// ══════════════════════════════════════════════════════════════
+const LABS = [
+{
+  id: 'lab0', num: '00', week: 'Week 2',
+  title: 'Getting Started', short: 'Setup',
+  cat: 'Environment Setup', tool: 'Anaconda / Spyder',
+  src: 'https://yteoh12.github.io/ai-labs/get-start/',
+  clos: [],
+  formsUrl: '',
+  objective: 'Set up the Python development environment for AI lab sessions using the Anaconda distribution.',
+  methods: [],
+  priorKnowledgeQ: 'Have you used Python before? List any programming languages you are familiar with.',
+  clo1_context: null,
+  clo2_task: 'Install Anaconda, launch Spyder, and verify all required libraries (NumPy, pandas, scikit-learn, matplotlib) are installed.',
+  clo3_problem: 'Write a Python script that imports all 4 required libraries and prints their version numbers. Test it in Spyder.',
+  steps: [
+    'Download and install Anaconda from anaconda.com/download',
+    'Launch Spyder IDE from Anaconda Navigator',
+    'Verify installation: run import numpy, pandas, sklearn, matplotlib in the console',
+    'Run your first .py file using F5 — observe the Editor, Variable Explorer, and IPython Console panels'
+  ]
+},
+{
+  id: 'lab1', num: '01', week: 'Week 2',
+  title: 'Basic Python', short: 'Basic Python',
+  cat: 'Introduction — Python Programming', tool: 'Python / Spyder',
+  src: 'https://yteoh12.github.io/ai-labs/lab1/',
+  clos: ['CLO2','CLO3'],
+  formsUrl: '',
+  objective: 'Understand and implement basic Python syntax including variables, arrays, loops, conditions, and user-defined functions.',
+  methods: [],
+  priorKnowledgeQ: 'What programming languages have you used? Are you familiar with Python lists, loops, or functions?',
+  clo1_context: null,
+  clo2_task: 'Implement array slicing, loops (for/while), conditions, and user-defined functions with optional arguments as described in the lab manual.',
+  clo3_problem: 'Build a filterFriend() function that searches a nested list of 10 friends by name, home country, or home state. Test it with at least 3 different filter combinations.',
+  steps: [
+    'Understand dynamic typing — assign different types to the same variable',
+    'Practice array operations: slicing, append, extend, insert, del',
+    'Implement for/while loops using zip and enumerate',
+    'Write user-defined functions with required and optional arguments',
+    'Complete the filterFriend() exercise'
+  ]
+},
+{
+  id: 'lab2', num: '02', week: 'Week 3',
+  title: 'Breadth-First Search', short: 'BFS',
+  cat: 'Classical AI — Uninformed Search', tool: 'Python / Spyder',
+  src: 'https://yteoh12.github.io/ai-labs/lab2/',
+  clos: ['CLO1','CLO2','CLO3'],
+  formsUrl: '',
+  objective: 'Implement and analyse the Breadth-First Search algorithm to solve route-finding problems.',
+  methods: ['Breadth-First Search (BFS)','Depth-First Search (DFS)','Uniform-Cost Search (UCS)','A* Search','Greedy Best-First Search'],
+  priorKnowledgeQ: 'What do you know about graph search? Have you encountered BFS or DFS before?',
+  clo1_context: 'Nick needs to travel from Arad to Bucharest in Romania by road. The solution must be the path with the FEWEST number of road segments (not shortest distance). Which search algorithm is most appropriate and why?',
+  clo2_task: 'Implement the Node class, expandAndReturnChildren(), and the bfs() function. Run it on the Romania road map and verify the solution.',
+  clo3_problem: 'Apply your BFS code to a new problem: model at least 8 stations of a Malaysian MRT/LRT line and find the fewest-stops route between two stations of your choice.',
+  steps: [
+    'Define state_space as a nested array with all Romania road connections and costs',
+    'Implement the Node class with state and parent attributes',
+    'Implement expandAndReturnChildren() to find connected cities',
+    'Implement bfs() with FIFO frontier and explored set',
+    'Trace the solution path from goal node back to root',
+    'Test with initial_state="Arad" and goal_state="Bucharest"'
+  ]
+},
+{
+  id: 'lab3', num: '03', week: 'Week 4',
+  title: 'Uniform-Cost Search', short: 'UCS',
+  cat: 'Classical AI — Optimal Search', tool: 'Python / Spyder',
+  src: 'https://yteoh12.github.io/ai-labs/lab3/',
+  clos: ['CLO1','CLO2','CLO3'],
+  formsUrl: '',
+  objective: 'Implement Uniform-Cost Search to find the minimum-cost path in a weighted graph.',
+  methods: ['Breadth-First Search (BFS)','Uniform-Cost Search (UCS)','Depth-First Search (DFS)','A* Search','Dijkstra\'s Algorithm'],
+  priorKnowledgeQ: 'After completing Lab 2 (BFS), what change do you think is needed to make BFS find the CHEAPEST path instead of the path with fewest edges?',
+  clo1_context: 'Nick now wants to travel from Arad to Bucharest via the CHEAPEST route in terms of total road distance (km). BFS found fewest stops — which algorithm finds the minimum-cost path?',
+  clo2_task: 'Modify your BFS code from Lab 2 to implement UCS: add path_cost to Node, sort frontier by cost, move goal test to expansion, handle frontier duplicates with lower cost.',
+  clo3_problem: 'Using your UCS implementation, model a food delivery scenario: a rider needs to travel the cheapest route from restaurant to customer in a city graph you design (at least 6 nodes, variable costs representing traffic/distance).',
+  steps: [
+    'Add path_cost attribute to the Node class',
+    'In expandAndReturnChildren, pass accumulated edge cost to child nodes',
+    'Sort frontier by path_cost after every insertion',
+    'Handle duplicates: discard if state in explored; replace if frontier node has higher cost',
+    'Move goal test from generation to expansion time',
+    'Verify optimal path cost from Arad to Bucharest is 418 km'
+  ]
+},
+{
+  id: 'lab4', num: '04', week: 'Week 5',
+  title: 'State Representation', short: 'State Rep.',
+  cat: 'Classical AI — Problem Formulation', tool: 'Python / Spyder',
+  src: 'https://yteoh12.github.io/ai-labs/lab4/',
+  clos: ['CLO1','CLO2','CLO3'],
+  formsUrl: '',
+  objective: 'Design state representations and transition models, then solve the vacuum world problem using BFS.',
+  methods: ['Breadth-First Search (BFS)','Uniform-Cost Search (UCS)','Depth-First Search (DFS)','Iterative Deepening DFS','Bidirectional Search'],
+  priorKnowledgeQ: 'In Labs 2–3, the state was a city name (string). How would you represent the state of a system that has multiple variables that can each change?',
+  clo1_context: 'A robot vacuum cleaner is in a 2-square room. Each square can be dirty or clean. The robot can move left, right, or suck. What is the most suitable AI search method to find a sequence of actions that cleans both squares?',
+  clo2_task: 'Implement the 2-square vacuum world: design the state tuple, implement the transition() function, and adapt BFS to use dynamic child generation (no static state_space array).',
+  clo3_problem: 'Extend the vacuum world to a 2×2 grid (4 squares). Design the new state representation, update the transition function for all 5 actions (up, down, left, right, suck), and solve using BFS from an initial state where all 4 squares are dirty.',
+  steps: [
+    'Design state as tuple: (robot_pos, left_dirty, right_dirty)',
+    'Implement is_goal(state) — both squares must be clean',
+    'Implement transition(state, action) for left, right, suck',
+    'Adapt expandAndReturnChildren() to call transition() instead of using state_space',
+    'Run BFS and verify the solution sequence for initial state (L, True, True)'
+  ]
+},
+{
+  id: 'lab5', num: '05', week: 'Week 8',
+  title: 'pandas', short: 'pandas',
+  cat: 'Machine Learning — Data Handling', tool: 'Python / pandas / NumPy',
+  src: 'https://yteoh12.github.io/ai-labs/lab5/',
+  clos: ['CLO2','CLO3'],
+  formsUrl: '',
+  objective: 'Learn pandas fundamentals for data manipulation and analysis, essential for all ML labs.',
+  methods: [],
+  priorKnowledgeQ: 'Have you worked with spreadsheets or tables of data before? What tools did you use (Excel, SQL, NumPy arrays)?',
+  clo1_context: null,
+  clo2_task: 'Complete all pandas exercises: create Series and DataFrames, practise .loc/.iloc indexing, boolean filtering, and load the Iris CSV dataset. Compute per-class statistics using .groupby().',
+  clo3_problem: 'Load the Iris dataset. For each class of iris, compute mean, min, max, std for every feature. Produce a scatter plot of sepal length vs petal length coloured by class. Write a summary of what the statistics reveal about the differences between classes.',
+  steps: [
+    'Create Series from list, dict, and scalar values',
+    'Create DataFrames from NumPy arrays and dicts',
+    'Practise .loc (label-based) and .iloc (position-based) selection',
+    'Apply boolean filtering: df[df.A > 0]',
+    'Download Iris dataset and load with correct column names',
+    'Group by class and compute per-class statistics',
+    'Produce a scatter plot with matplotlib'
+  ]
+},
+{
+  id: 'lab6', num: '06', week: 'Week 9',
+  title: 'Linear Regression', short: 'Lin. Reg.',
+  cat: 'Machine Learning — Supervised Learning', tool: 'Python / sklearn / matplotlib',
+  src: 'https://yteoh12.github.io/ai-labs/lab6/',
+  clos: ['CLO1','CLO2','CLO3'],
+  formsUrl: '',
+  objective: 'Implement gradient descent for linear regression and compare with scikit-learn\'s LinearRegression.',
+  methods: ['Linear Regression','Polynomial Regression','Ridge/Lasso Regression','Decision Tree Regression','k-Nearest Neighbours Regression'],
+  priorKnowledgeQ: 'What is the relationship between a straight line y = mx + c and a prediction model? What does it mean for a model to "fit" data?',
+  clo1_context: 'You have a dataset of 442 diabetes patients with 10 clinical features. You want to predict a patient\'s disease progression score (a continuous number). Which ML method is most appropriate as a starting point, and why?',
+  clo2_task: 'Implement model(), cost(), and derivatives() functions. Build the gradient descent loop with 3 termination conditions. Visualise the regression line and compare with sklearn LinearRegression.',
+  clo3_problem: 'Using the diabetes dataset, build a multivariate linear regression model using bmi and bp as features. Compare the test cost against the univariate model (bmi only). Write a reflection: does adding bp improve the prediction?',
+  steps: [
+    'Load diabetes dataset, convert to pandas DataFrame',
+    'Split 80-20 using train_test_split',
+    'Implement model(x,m,c), cost(y,yh), derivatives(x,y,yh)',
+    'Implement gradient descent loop with J_min, del_J_min, max_iter termination',
+    'Visualise animated regression line per iteration',
+    'Compare m and c values against sklearn LinearRegression',
+    'Extend to multivariate: features bmi and bp'
+  ]
+},
+{
+  id: 'lab7', num: '07', week: 'Week 10',
+  title: 'k-Nearest Neighbours', short: 'KNN',
+  cat: 'Machine Learning — Classification & Regression', tool: 'Python / sklearn',
+  src: 'https://yteoh12.github.io/ai-labs/lab7/',
+  clos: ['CLO1','CLO2','CLO3'],
+  formsUrl: '',
+  objective: 'Perform k-Nearest Neighbours for both classification (iris) and regression (diabetes) using scikit-learn.',
+  methods: ['k-Nearest Neighbours (KNN)','Naive Bayes','Logistic Regression','Support Vector Machine (SVM)','Decision Tree'],
+  priorKnowledgeQ: 'If someone new joins your class, how would you predict which sports team they support based on their characteristics? Describe your intuition — this is essentially how KNN works.',
+  clo1_context: 'You need to classify iris flowers into 3 species (setosa, versicolor, virginica) based on sepal and petal measurements. The dataset has 150 samples with clear class boundaries. Which classification algorithm would you choose first, and why?',
+  clo2_task: 'Implement KNN classification on iris (k=5) using sepal length and width. Visualise the decision boundary. Then implement KNN regression on diabetes using age and bmi. For both, create a loop over k values and plot accuracy vs k.',
+  clo3_problem: 'Using all 4 iris features (not just 2), train a KNN classifier and compare accuracy against the 2-feature version. Then design a creative real-world classification problem of your own, generate or find a suitable dataset, and apply KNN to solve it. Write a reflection.',
+  steps: [
+    'Load and split iris and diabetes datasets (80-20, random_state=1)',
+    'Instantiate KNeighborsClassifier(5) and train on sepal length + width',
+    'Use .predict() on test set, compare with target, compute .score()',
+    'Visualise decision boundary: meshgrid, pcolormesh, scatter training/testing data',
+    'Loop k=1..20, plot accuracy vs k for classification',
+    'Instantiate KNeighborsRegressor(5) and train on age + bmi',
+    'Repeat steps 3–5 for regression with colorbar visualisation'
+  ]
+},
+{
+  id: 'lab8', num: '08', week: 'Week 12',
+  title: 'Decision Tree', short: 'Decision Tree',
+  cat: 'Machine Learning — CART Algorithm', tool: 'Python / sklearn',
+  src: 'https://yteoh12.github.io/ai-labs/lab8/',
+  clos: ['CLO1','CLO2','CLO3'],
+  formsUrl: '',
+  objective: 'Apply the CART Decision Tree algorithm for classification and regression, and analyse the overfitting problem.',
+  methods: ['Decision Tree (CART)','Random Forest','Gradient Boosting','k-Nearest Neighbours','Support Vector Machine (SVM)'],
+  priorKnowledgeQ: 'Think about how a doctor diagnoses a disease by asking a series of yes/no questions. How does this relate to a decision tree?',
+  clo1_context: 'Given the same iris dataset from Lab 7, you now want a model that is EXPLAINABLE — you need to show a doctor exactly WHY a prediction was made (which features were important and what thresholds were used). Which algorithm is better suited — KNN or Decision Tree, and why?',
+  clo2_task: 'Train a DecisionTreeClassifier(criterion="gini") on iris. Visualise using plot_tree(). Loop max_depth=[1,2,3,5,7,20] and plot train vs test accuracy on one graph. Visualise the decision surface for 2 features. Repeat for DecisionTreeRegressor on diabetes.',
+  clo3_problem: 'Find or create a real-world dataset (e.g. student grades, weather, medical symptoms) with at least 50 samples and 3 features. Train a decision tree classifier. Find the optimal max_depth by plotting train vs test accuracy. Write a plain-English explanation of the tree\'s top 3 decision rules.',
+  steps: [
+    'Load iris and diabetes (same setup as Lab 7)',
+    'Train DecisionTreeClassifier(criterion="gini") on all iris features',
+    'Visualise tree with plot_tree(filled=True, rounded=True)',
+    'Loop max_depth=[1,2,3,5,7,20]: compute and plot train vs test accuracy',
+    'Visualise decision surface using sepal length + sepal width',
+    'Demonstrate overfitting: compare unlimited vs max_depth=3',
+    'Repeat classification steps for DecisionTreeRegressor on diabetes'
+  ]
+},
+{
+  id: 'lab9', num: '09', week: 'Week 13',
+  title: 'Clustering (k-Means)', short: 'k-Means',
+  cat: 'Machine Learning — Unsupervised Learning', tool: 'Python / sklearn / NumPy',
+  src: 'https://yteoh12.github.io/ai-labs/lab9/',
+  clos: ['CLO1','CLO2','CLO3'],
+  formsUrl: '',
+  objective: 'Implement k-Means clustering from scratch and using scikit-learn, and compare the results.',
+  methods: ['k-Means Clustering','DBSCAN','Hierarchical Clustering','Gaussian Mixture Model','Mean Shift'],
+  priorKnowledgeQ: 'Imagine you have 200 unlabelled data points on a scatter plot with 4 visible groups. Without any labels, how would you assign each point to one of the 4 groups?',
+  clo1_context: 'A retail company wants to segment 1,000 customers into groups based on spending patterns and frequency of visits, WITHOUT any predefined categories. They want to discover natural groupings in the data. Which type of ML and which specific algorithm is most appropriate?',
+  clo2_task: 'Implement k-Means from scratch: get_random_centroids(), group_to_centroids(), find_centroids() with visualisation. Then reproduce using sklearn KMeans and compare results using the Elbow Method to verify k=4.',
+  clo3_problem: 'Create a real-world dataset of at least 100 data points with 2 features (you can generate this with make_blobs or collect real data). Apply k-Means. Use the Elbow Method to determine the best k. Visualise the final clusters and centroids. Write a business interpretation of what each cluster represents.',
+  steps: [
+    'Generate 200-sample dataset with 4 clusters using make_blobs',
+    'Implement get_random_centroids(data_points, n) → centroids, others',
+    'Implement group_to_centroids(data_points, centroids) → group indices',
+    'Implement find_centroids(data_points, groups) → new centroids',
+    'Add termination condition (centroids stabilise) and visualise each iteration',
+    'Reproduce using sklearn KMeans(n_clusters=4)',
+    'Apply Elbow Method: plot k vs inertia for k=2..8'
+  ]
+}
+];
+
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+let currentLabIdx = -1;
+
+// Emoji confidence scale
+const EMOJIS = [
+  { val: 1, emoji: '😟', label: 'Not at all' },
+  { val: 2, emoji: '😐', label: 'Unsure' },
+  { val: 3, emoji: '🙂', label: 'Fairly OK' },
+  { val: 4, emoji: '😃', label: 'Confident' },
+];
+const SATISFACTION = [
+  { val: 1, emoji: '😞', label: 'Poor' },
+  { val: 2, emoji: '😑', label: 'OK' },
+  { val: 3, emoji: '😊', label: 'Good' },
+  { val: 4, emoji: '🤩', label: 'Excellent' },
+];
+
+// ══════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════
+function init() {
+  renderSidebarNav();
+  renderProgressTab();
+  promptStudentInfo();
+  updateCLOBars();
+}
+
+function promptStudentInfo() {
+  if (!DB.student.name) {
+    const name = prompt('Welcome! Enter your full name:');
+    if (name) DB.student.name = name;
+    const id = prompt('Enter your Student ID:');
+    if (id) DB.student.id = id;
+    const prog = prompt('Enter your programme (e.g. BCNS, BCS, BSDA, BIT, BSE, BAI):');
+    if (prog) DB.student.programme = prog;
+    saveDB();
+  }
+  document.getElementById('sb-name').textContent = DB.student.name || 'Guest';
+  document.getElementById('sb-prog').textContent = (DB.student.id || '—') + (DB.student.programme ? ' · ' + DB.student.programme : '');
+  const initials = (DB.student.name || 'G').split(' ').map(w => w[0]).join('').substring(0,2).toUpperCase();
+  document.getElementById('sb-avatar').textContent = initials;
+}
+
+function renderSidebarNav() {
+  const nav = document.getElementById('sb-nav');
+  nav.innerHTML = '<div class="sb-nav-label">// Lab Sessions</div>';
+  LABS.forEach((lab, i) => {
+    const sub = DB.submissions[lab.id];
+    const isDone = sub && sub.completed;
+    const isPartial = sub && !sub.completed && (
+      sub.clo1?.saved || sub.clo2?.saved || sub.clo3?.saved
+    );
+    const statusClass = isDone ? 'done' : isPartial ? 'partial' : '';
+    const activeClass = i === currentLabIdx ? 'active' : '';
+    nav.innerHTML += `
+      <div class="sb-nav-item ${activeClass}" onclick="openLab(${i})">
+        <div class="nav-num">LAB ${lab.num}</div>
+        <div class="nav-label">${lab.short}</div>
+        <div class="nav-status ${statusClass}"></div>
+      </div>`;
+  });
+}
+
+function openLab(idx) {
+  currentLabIdx = idx;
+  const lab = LABS[idx];
+  const sub = getSubmission(lab.id);
+
+  // Update header
+  document.getElementById('lab-num-big').textContent = lab.num;
+  document.getElementById('lab-cat').textContent = lab.cat;
+  document.getElementById('lab-title-main').textContent = lab.title;
+  document.getElementById('crumb').textContent = `Lab ${lab.num} — ${lab.short}`;
+
+  // Chips
+  const chips = document.getElementById('lab-chips');
+  chips.innerHTML = `<span class="chip chip-week">Week ${lab.week.replace('Week ','')}</span>`;
+  lab.clos.forEach(c => {
+    const cls = c === 'CLO1' ? 'clo1' : c === 'CLO2' ? 'clo2' : 'clo3';
+    chips.innerHTML += `<span class="chip chip-${cls}">${c}</span>`;
+  });
+  chips.innerHTML += `<span class="chip chip-src"><a href="${lab.src}" target="_blank">Source ↗</a></span>`;
+
+  // Status chip
+  const statusEl = document.getElementById('lab-status-chip');
+  if (sub.completed) {
+    statusEl.className = 'chip chip-clo2'; statusEl.textContent = 'Completed';
+  } else {
+    statusEl.className = 'chip chip-week'; statusEl.textContent = 'In Progress';
+  }
+  document.getElementById('complete-btn').style.display = 'inline-flex';
+
+  renderLabSections(lab, sub);
+  renderManualContent(lab);
+  switchMainTab('lab');
+  renderSidebarNav();
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════════════════
+// LAB SECTION RENDERER
+// ══════════════════════════════════════════════════════════════
+function renderLabSections(lab, sub) {
+  const container = document.getElementById('lab-sections');
+  container.innerHTML = '';
+
+  // 1. PRE-LAB
+  container.appendChild(buildSection('prelab', lab, sub));
+  // 2. CLO1
+  if (lab.clo1_context) container.appendChild(buildSection('clo1', lab, sub));
+  // 3. CLO2
+  container.appendChild(buildSection('clo2', lab, sub));
+  // 4. CLO3
+  container.appendChild(buildSection('clo3', lab, sub));
+  // 5. POST-LAB
+  container.appendChild(buildSection('postlab', lab, sub));
+  // 6. Forms embed
+  container.appendChild(buildFormsSection(lab, sub));
+
+  // Auto-open first incomplete section
+  const firstIncomplete = container.querySelector('.clo-section:not([data-complete="true"])');
+  if (firstIncomplete) firstIncomplete.classList.add('open');
+  else container.querySelector('.clo-section')?.classList.add('open');
+}
+
+function buildSection(type, lab, sub) {
+  const div = document.createElement('div');
+  div.className = `clo-section section-${type}`;
+  div.dataset.type = type;
+
+  const configs = {
+    prelab: {
+      icon: '📋', tag: 'PRE-LAB', bloom: '',
+      title: 'Pre-Lab Check',
+      subtitle: 'Rate your confidence and check your prior knowledge before starting.',
+      complete: sub.prelab.confidence_before !== null
+    },
+    clo1: {
+      icon: '🧩', tag: 'CLO1', bloom: 'C4 — Evaluate',
+      title: 'Evaluate AI Methods',
+      subtitle: 'Select the most appropriate AI method and justify your choice.',
+      complete: sub.clo1.saved
+    },
+    clo2: {
+      icon: '⚙️', tag: 'CLO2', bloom: 'C3 — Implement',
+      title: 'Implement the Solution',
+      subtitle: 'Run the Python code, submit your output, and rate the difficulty.',
+      complete: sub.clo2.saved
+    },
+    clo3: {
+      icon: '🏗️', tag: 'CLO3', bloom: 'C3 — Construct',
+      title: 'Construct a Real-World Solution',
+      subtitle: 'Build a Python solution to the real-world problem below.',
+      complete: sub.clo3.saved
+    },
+    postlab: {
+      icon: '🪞', tag: 'POST-LAB', bloom: '',
+      title: 'Post-Lab Reflection',
+      subtitle: 'Reflect on your learning and rate your confidence after completing the lab.',
+      complete: sub.postlab.saved
+    }
+  };
+
+  const c = configs[type];
+  if (!c) return div;
+  if (c.complete) div.dataset.complete = 'true';
+
+  div.innerHTML = `
+    <div class="clo-header" onclick="toggleSection(this)">
+      <div class="clo-icon">${c.icon}</div>
+      <div class="clo-header-info">
+        <div class="clo-tag-row">
+          <span class="clo-tag">${c.tag}</span>
+          ${c.bloom ? `<span class="clo-bloom">${c.bloom}</span>` : ''}
+        </div>
+        <div class="clo-title">${c.title}</div>
+        <div class="clo-subtitle">${c.subtitle}</div>
+      </div>
+      <div class="clo-status-dot ${c.complete ? 'filled' : ''}"></div>
+      <div class="clo-chevron">▶</div>
+    </div>
+    <div class="clo-body" id="body-${type}">
+      ${buildSectionBody(type, lab, sub)}
+    </div>`;
+
+  return div;
+}
+
+function buildSectionBody(type, lab, sub) {
+  if (type === 'prelab') return buildPreLab(lab, sub);
+  if (type === 'clo1')   return buildCLO1(lab, sub);
+  if (type === 'clo2')   return buildCLO2(lab, sub);
+  if (type === 'clo3')   return buildCLO3(lab, sub);
+  if (type === 'postlab') return buildPostLab(lab, sub);
+  return '';
+}
+
+// ── PRE-LAB ──
+function buildPreLab(lab, sub) {
+  const saved = sub.prelab;
+  return `
+    <div style="margin-top:14px">
+      <div style="font-size:12px;color:var(--muted2);line-height:1.8;margin-bottom:14px">
+        Before starting this lab, rate your current confidence level and check what you already know.
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Confidence Level BEFORE this lab <span class="req">*</span></div>
+        <div class="emoji-scale" id="conf-before-scale">
+          ${EMOJIS.map(e => `
+            <div class="emoji-btn ${saved.confidence_before === e.val ? 'selected' : ''}"
+                 onclick="selectEmoji('conf-before',${e.val},'${lab.id}')">
+              <span class="emoji">${e.emoji}</span>
+              <span class="emoji-label">${e.label}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Prior Knowledge Check <span class="req">*</span></div>
+        <div class="prose" style="margin-bottom:6px">${lab.priorKnowledgeQ}</div>
+        <textarea class="form-textarea" id="prior-knowledge" placeholder="Write your answer here..."
+          rows="3" oninput="autoSavePrelab('${lab.id}')">${saved.prior_knowledge || ''}</textarea>
+      </div>
+
+      <div class="form-group">
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text)">
+          Lab Objective
+        </div>
+        <div class="info-box note" style="margin:0">
+          <div class="ib-label">// What you will learn</div>
+          ${lab.objective}
+        </div>
+      </div>
+
+      ${lab.steps.length > 0 ? `
+      <div class="form-group">
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;margin-bottom:8px;color:var(--text)">
+          Lab Procedure Overview
+        </div>
+        <div class="n-list">
+          ${lab.steps.map((s,i) => `
+            <div class="n-item">
+              <div class="n-num">${i+1}.</div>
+              <div class="n-text">${s}</div>
+            </div>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <div class="section-save-row">
+        <div class="save-status" id="save-status-prelab">
+          ${saved.confidence_before !== null ? '<div class="save-dot"></div> Saved' : 'Not saved yet'}
+        </div>
+        <button class="btn-save" onclick="savePrelab('${lab.id}')">Save Pre-Lab ↓</button>
+      </div>
+    </div>`;
+}
+
+// ── CLO1 ──
+function buildCLO1(lab, sub) {
+  if (!lab.clo1_context) return '';
+  const saved = sub.clo1;
+  const methodsHtml = lab.methods.map(m => `
+    <div class="method-card ${saved.method === m ? 'selected' : ''}"
+         onclick="selectMethod('${lab.id}','${m.replace(/'/g,'\\\'')}')" >
+      <div class="method-name">${m}</div>
+      <div class="method-desc">Click to select</div>
+    </div>`).join('');
+
+  return `
+    <div style="margin-top:14px">
+      <div class="info-box warn" style="margin-bottom:14px">
+        <div class="ib-label">// Problem Context</div>
+        ${lab.clo1_context}
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">
+          Select the Most Appropriate AI Method <span class="req">*</span>
+          <span class="form-label clo-badge" style="background:var(--clo1-bg);color:var(--clo1)">CLO1</span>
+        </div>
+        <div class="method-grid" id="method-grid-${lab.id}">${methodsHtml}</div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Justify Your Selection <span class="req">*</span>
+          <span class="form-label clo-badge" style="background:var(--clo1-bg);color:var(--clo1)">CLO1 · Evaluate</span>
+        </div>
+        <textarea class="form-textarea" id="clo1-justification" rows="4"
+          placeholder="Explain WHY this method is most suitable. Consider: the nature of the problem, the type of data, whether labels are available, whether you need optimal cost or just any solution, interpretability, etc."
+          oninput="autoSaveCLO1('${lab.id}')">${saved.justification || ''}</textarea>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Confidence in your method selection</div>
+        <div class="emoji-scale" id="clo1-conf-scale">
+          ${EMOJIS.map(e => `
+            <div class="emoji-btn ${saved.confidence === e.val ? 'selected' : ''}"
+                 onclick="selectEmoji('clo1-conf',${e.val},'${lab.id}')">
+              <span class="emoji">${e.emoji}</span>
+              <span class="emoji-label">${e.label}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="section-save-row">
+        <div class="save-status" id="save-status-clo1">
+          ${saved.saved ? '<div class="save-dot"></div> Saved' : 'Not saved yet'}
+        </div>
+        <button class="btn-save" onclick="saveCLO1('${lab.id}')">Save CLO1 ↓</button>
+      </div>
+    </div>`;
+}
+
+// ── CLO2 ──
+function buildCLO2(lab, sub) {
+  const saved = sub.clo2;
+  return `
+    <div style="margin-top:14px">
+      <div class="info-box tip" style="margin-bottom:14px">
+        <div class="ib-label">// CLO2 Task — Implement</div>
+        ${lab.clo2_task}
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">
+          Your Python Code <span class="req">*</span>
+          <span class="form-label clo-badge" style="background:var(--clo2-bg);color:var(--clo2)">CLO2 · Implement</span>
+        </div>
+        <textarea class="form-textarea code-textarea" id="clo2-code" rows="12"
+          placeholder="# Paste or type your Python code here&#10;# Include all imports, function definitions, and the main execution"
+          oninput="autoSaveCLO2('${lab.id}')">${saved.code || ''}</textarea>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Program Output / Results <span class="req">*</span></div>
+        <textarea class="form-textarea code-textarea" id="clo2-output" rows="5"
+          placeholder="Paste the output from your console here (print statements, accuracy scores, etc.)"
+          oninput="autoSaveCLO2('${lab.id}')">${saved.output || ''}</textarea>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Execution Status <span class="req">*</span></div>
+        <div class="run-status-row">
+          ${[
+            {v:'success', label:'✅ Success — ran without errors', cls:'sel-success'},
+            {v:'partial', label:'⚠ Partial — ran with minor issues', cls:'sel-partial'},
+            {v:'fail',    label:'❌ Failed — could not run', cls:'sel-fail'}
+          ].map(s => `
+            <div class="run-status-btn ${saved.status === s.v ? s.cls : ''}"
+                 onclick="selectRunStatus('${lab.id}','${s.v}','${s.cls}')">${s.label}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Difficulty Level</div>
+        <div class="difficulty-row">
+          ${[
+            {v:'easy',   label:'😌 Easy',     cls:'sel-easy'},
+            {v:'medium', label:'😅 Medium',   cls:'sel-medium'},
+            {v:'hard',   label:'😤 Hard',     cls:'sel-hard'}
+          ].map(d => `
+            <div class="diff-btn ${saved.difficulty === d.v ? d.cls : ''}"
+                 onclick="selectDifficulty('${lab.id}','${d.v}','${d.cls}')">${d.label}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="section-save-row">
+        <div class="save-status" id="save-status-clo2">
+          ${saved.saved ? '<div class="save-dot"></div> Saved' : 'Not saved yet'}
+        </div>
+        <button class="btn-save" onclick="saveCLO2('${lab.id}')">Save CLO2 ↓</button>
+      </div>
+    </div>`;
+}
+
+// ── CLO3 ──
+function buildCLO3(lab, sub) {
+  const saved = sub.clo3;
+  return `
+    <div style="margin-top:14px">
+      <div class="info-box" style="background:var(--clo3-bg);border-left:3px solid var(--clo3);margin-bottom:14px">
+        <div class="ib-label" style="color:var(--clo3)">// CLO3 Real-World Problem — Construct</div>
+        ${lab.clo3_problem}
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">
+          Programming Script <span class="req">*</span>
+          <span class="form-label clo-badge" style="background:var(--clo3-bg);color:var(--clo3)">CLO3 · Construct</span>
+        </div>
+        <textarea class="form-textarea code-textarea" id="clo3-script" rows="14"
+          placeholder="# Write your complete Python script here&#10;# This should solve the real-world problem described above&#10;# Include comments explaining each part"
+          oninput="autoSaveCLO3('${lab.id}')">${saved.script || ''}</textarea>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Explain Your Approach <span class="req">*</span></div>
+        <textarea class="form-textarea" id="clo3-approach" rows="4"
+          placeholder="Describe how you approached the problem. Which AI technique did you use? What were the key design decisions? What assumptions did you make?"
+          oninput="autoSaveCLO3('${lab.id}')">${saved.approach || ''}</textarea>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Reflection <span class="req">*</span></div>
+        <textarea class="form-textarea" id="clo3-reflection" rows="4"
+          placeholder="What worked well? What was challenging? What would you improve if you had more time? How does this connect to the AI theory from lectures?"
+          oninput="autoSaveCLO3('${lab.id}')">${saved.reflection || ''}</textarea>
+      </div>
+
+      <div class="section-save-row">
+        <div class="save-status" id="save-status-clo3">
+          ${saved.saved ? '<div class="save-dot"></div> Saved' : 'Not saved yet'}
+        </div>
+        <button class="btn-save" onclick="saveCLO3('${lab.id}')">Save CLO3 ↓</button>
+      </div>
+    </div>`;
+}
+
+// ── POST-LAB ──
+function buildPostLab(lab, sub) {
+  const saved = sub.postlab;
+  const before = sub.prelab.confidence_before;
+  const after  = saved.confidence_after;
+  const delta  = after !== null && before !== null ? after - before : null;
+  const deltaHtml = delta !== null
+    ? `<span class="conf-delta ${delta > 0 ? 'up' : delta < 0 ? 'down' : 'same'}">
+        ${delta > 0 ? '▲ +' : delta < 0 ? '▼ ' : '= '}${delta} pts
+       </span>`
+    : '';
+
+  return `
+    <div style="margin-top:14px">
+      <div class="form-group">
+        <div class="form-label">Confidence Level AFTER this lab <span class="req">*</span></div>
+        <div class="emoji-scale" id="conf-after-scale">
+          ${EMOJIS.map(e => `
+            <div class="emoji-btn ${saved.confidence_after === e.val ? 'selected' : ''}"
+                 onclick="selectEmoji('conf-after',${e.val},'${lab.id}')">
+              <span class="emoji">${e.emoji}</span>
+              <span class="emoji-label">${e.label}</span>
+            </div>`).join('')}
+        </div>
+        ${(before !== null || after !== null) ? `
+        <div class="confidence-compare" style="margin-top:10px">
+          <div class="conf-item">
+            <div class="conf-label">Before</div>
+            <div class="conf-emoji">${before !== null ? EMOJIS[before-1].emoji : '—'}</div>
+          </div>
+          <div class="conf-arrow">→</div>
+          <div class="conf-item">
+            <div class="conf-label">After</div>
+            <div class="conf-emoji">${after !== null ? EMOJIS[after-1].emoji : '—'}</div>
+          </div>
+          <div>${deltaHtml}</div>
+        </div>` : ''}
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Satisfaction Level <span class="req">*</span></div>
+        <div class="emoji-scale" id="satisfaction-scale">
+          ${SATISFACTION.map(s => `
+            <div class="emoji-btn ${saved.satisfaction === s.val ? 'selected' : ''}"
+                 onclick="selectEmoji('satisfaction',${s.val},'${lab.id}')">
+              <span class="emoji">${s.emoji}</span>
+              <span class="emoji-label">${s.label}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">Learning Reflection <span class="req">*</span></div>
+        <textarea class="form-textarea" id="postlab-reflection" rows="5"
+          placeholder="Summarise what you learned in this lab. Which CLO activities were most valuable? What questions do you still have? How will you apply this knowledge?"
+          oninput="autoSavePostlab('${lab.id}')">${saved.reflection || ''}</textarea>
+      </div>
+
+      <div class="section-save-row">
+        <div class="save-status" id="save-status-postlab">
+          ${saved.saved ? '<div class="save-dot"></div> Saved' : 'Not saved yet'}
+        </div>
+        <button class="btn-save" onclick="savePostlab('${lab.id}')">Save Post-Lab ↓</button>
+      </div>
+    </div>`;
+}
+
+// ── FORMS SECTION ──
+function buildFormsSection(lab, sub) {
+  const div = document.createElement('div');
+  div.className = 'forms-section';
+  div.innerHTML = `
+    <div class="forms-header">
+      <span class="forms-icon">📝</span>
+      <div>
+        <div class="forms-title">Microsoft Forms — Data Submission</div>
+        <div class="forms-sub">Submit your lab data to the instructor's dashboard via Microsoft Forms</div>
+      </div>
+    </div>
+    <div class="forms-placeholder">
+      <div class="forms-placeholder-icon">📋</div>
+      <div class="forms-placeholder-text">
+        Paste your Microsoft Forms embed URL below to display the form here.<br>
+        Go to <strong>Microsoft Forms → Share → Embed</strong> and copy the <code>src</code> URL.
+      </div>
+      <div class="forms-url-input">
+        <input type="text" id="forms-url-${lab.id}" placeholder="https://forms.office.com/Pages/ResponsePage.aspx?id=..."
+          value="${lab.formsUrl || ''}" onchange="setFormsUrl('${lab.id}',this.value)">
+        <button class="btn btn-primary" onclick="loadForm('${lab.id}')">Load Form</button>
+      </div>
+      <div id="forms-embed-${lab.id}" style="margin-top:12px"></div>
+    </div>`;
+  if (lab.formsUrl) {
+    // Show iframe immediately if URL already set
+    div.querySelector(`#forms-embed-${lab.id}`).innerHTML =
+      `<iframe src="${lab.formsUrl}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`;
+  }
+  return div;
+}
+
+// ══════════════════════════════════════════════════════════════
+// INTERACTION HANDLERS
+// ══════════════════════════════════════════════════════════════
+function toggleSection(header) {
+  const section = header.closest('.clo-section');
+  section.classList.toggle('open');
+}
+
+function selectEmoji(key, val, labId) {
+  const sub = getSubmission(labId);
+  if (key === 'conf-before') sub.prelab.confidence_before = val;
+  else if (key === 'conf-after') sub.postlab.confidence_after = val;
+  else if (key === 'satisfaction') sub.postlab.satisfaction = val;
+  else if (key === 'clo1-conf') sub.clo1.confidence = val;
+  saveDB();
+
+  // Re-render emoji scale
+  const scaleId = key === 'conf-before' ? 'conf-before-scale'
+                : key === 'conf-after'  ? 'conf-after-scale'
+                : key === 'satisfaction' ? 'satisfaction-scale'
+                : 'clo1-conf-scale';
+  const scale = document.getElementById(scaleId);
+  if (scale) {
+    scale.querySelectorAll('.emoji-btn').forEach(btn => btn.classList.remove('selected'));
+    scale.querySelectorAll('.emoji-btn')[val-1]?.classList.add('selected');
+  }
+
+  // If both before and after set, update compare display
+  if (key === 'conf-after') {
+    const before = sub.prelab.confidence_before;
+    const after = val;
+    const delta = after - (before || 0);
+    // Try to refresh compare section
+    const compare = document.querySelector('.confidence-compare');
+    if (compare && before !== null) {
+      const items = compare.querySelectorAll('.conf-emoji');
+      if (items[0]) items[0].textContent = EMOJIS[before-1].emoji;
+      if (items[1]) items[1].textContent = EMOJIS[after-1].emoji;
+    }
+  }
+}
+
+function selectMethod(labId, method) {
+  const sub = getSubmission(labId);
+  sub.clo1.method = method;
+  saveDB();
+  document.querySelectorAll(`#method-grid-${labId} .method-card`).forEach(c => c.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+}
+
+function selectRunStatus(labId, val, cls) {
+  const sub = getSubmission(labId);
+  sub.clo2.status = val;
+  saveDB();
+  document.querySelectorAll('.run-status-btn').forEach(b => b.className = 'run-status-btn');
+  event.currentTarget.classList.add(cls);
+}
+
+function selectDifficulty(labId, val, cls) {
+  const sub = getSubmission(labId);
+  sub.clo2.difficulty = val;
+  saveDB();
+  document.querySelectorAll('.diff-btn').forEach(b => b.className = 'diff-btn');
+  event.currentTarget.classList.add(cls);
+}
+
+// Auto-save (debounced)
+let saveTimer = null;
+function autoSave(fn) {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(fn, 800);
+}
+function autoSavePrelab(labId)  { autoSave(() => savePrelab(labId, true))  }
+function autoSaveCLO1(labId)    { autoSave(() => saveCLO1(labId, true))    }
+function autoSaveCLO2(labId)    { autoSave(() => saveCLO2(labId, true))    }
+function autoSaveCLO3(labId)    { autoSave(() => saveCLO3(labId, true))    }
+function autoSavePostlab(labId) { autoSave(() => savePostlab(labId, true)) }
+
+// ── SAVE FUNCTIONS ──
+function savePrelab(labId, silent = false) {
+  const sub = getSubmission(labId);
+  sub.prelab.prior_knowledge = document.getElementById('prior-knowledge')?.value || '';
+  saveDB();
+  const el = document.getElementById('save-status-prelab');
+  if (el) el.innerHTML = '<div class="save-dot"></div> Saved';
+  if (!silent) showToast('Pre-lab saved ✓');
+  updateCLOBars();
+}
+
+function saveCLO1(labId, silent = false) {
+  const sub = getSubmission(labId);
+  sub.clo1.justification = document.getElementById('clo1-justification')?.value || '';
+  if (!sub.clo1.method && !silent) { showToast('⚠ Please select a method first'); return; }
+  sub.clo1.saved = true;
+  saveDB();
+  const el = document.getElementById('save-status-clo1');
+  if (el) el.innerHTML = '<div class="save-dot"></div> Saved';
+  if (!silent) showToast('CLO1 saved ✓');
+  markSectionComplete('clo1');
+  updateCLOBars();
+}
+
+function saveCLO2(labId, silent = false) {
+  const sub = getSubmission(labId);
+  sub.clo2.code   = document.getElementById('clo2-code')?.value   || '';
+  sub.clo2.output = document.getElementById('clo2-output')?.value || '';
+  if (!sub.clo2.code && !silent) { showToast('⚠ Please enter your code'); return; }
+  sub.clo2.saved = true;
+  saveDB();
+  const el = document.getElementById('save-status-clo2');
+  if (el) el.innerHTML = '<div class="save-dot"></div> Saved';
+  if (!silent) showToast('CLO2 saved ✓');
+  markSectionComplete('clo2');
+  updateCLOBars();
+}
+
+function saveCLO3(labId, silent = false) {
+  const sub = getSubmission(labId);
+  sub.clo3.script     = document.getElementById('clo3-script')?.value     || '';
+  sub.clo3.approach   = document.getElementById('clo3-approach')?.value   || '';
+  sub.clo3.reflection = document.getElementById('clo3-reflection')?.value || '';
+  if (!sub.clo3.script && !silent) { showToast('⚠ Please enter your script'); return; }
+  sub.clo3.saved = true;
+  saveDB();
+  const el = document.getElementById('save-status-clo3');
+  if (el) el.innerHTML = '<div class="save-dot"></div> Saved';
+  if (!silent) showToast('CLO3 saved ✓');
+  markSectionComplete('clo3');
+  updateCLOBars();
+}
+
+function savePostlab(labId, silent = false) {
+  const sub = getSubmission(labId);
+  sub.postlab.reflection = document.getElementById('postlab-reflection')?.value || '';
+  if (!sub.postlab.confidence_after && !silent) { showToast('⚠ Rate your confidence after the lab'); return; }
+  sub.postlab.saved = true;
+  saveDB();
+  const el = document.getElementById('save-status-postlab');
+  if (el) el.innerHTML = '<div class="save-dot"></div> Saved';
+  if (!silent) showToast('Post-lab saved ✓');
+  markSectionComplete('postlab');
+  updateCLOBars();
+}
+
+function markSectionComplete(type) {
+  const section = document.querySelector(`.clo-section[data-type="${type}"]`);
+  if (section) {
+    section.dataset.complete = 'true';
+    section.querySelector('.clo-status-dot')?.classList.add('filled');
+  }
+}
+
+function completeCurrentLab() {
+  if (currentLabIdx < 0) return;
+  const lab = LABS[currentLabIdx];
+  const sub = getSubmission(lab.id);
+  sub.completed = true;
+  sub.completed_at = Date.now();
+  saveDB();
+  document.getElementById('lab-status-chip').className = 'chip chip-clo2';
+  document.getElementById('lab-status-chip').textContent = 'Completed';
+  renderSidebarNav();
+  updateCLOBars();
+  renderProgressTab();
+  showToast(`🎉 Lab ${lab.num} marked complete!`);
+}
+
+function setFormsUrl(labId, url) {
+  const labIdx = LABS.findIndex(l => l.id === labId);
+  if (labIdx >= 0) LABS[labIdx].formsUrl = url;
+}
+
+function loadForm(labId) {
+  const url = document.getElementById(`forms-url-${labId}`)?.value?.trim();
+  if (!url) return;
+  setFormsUrl(labId, url);
+  const embed = document.getElementById(`forms-embed-${labId}`);
+  if (embed) embed.innerHTML = `<iframe src="${url}" width="100%" height="500" frameborder="0" allowfullscreen></iframe>`;
+  showToast('Form loaded ✓');
+}
+
+// ══════════════════════════════════════════════════════════════
+// PROGRESS & ANALYTICS
+// ══════════════════════════════════════════════════════════════
+function updateCLOBars() {
+  const labs = LABS.filter(l => l.clos.length > 0);
+  const clo1Labs = labs.filter(l => l.clos.includes('CLO1'));
+  const clo2Labs = labs.filter(l => l.clos.includes('CLO2'));
+  const clo3Labs = labs.filter(l => l.clos.includes('CLO3'));
+
+  const clo1Done = clo1Labs.filter(l => DB.submissions[l.id]?.clo1?.saved).length;
+  const clo2Done = clo2Labs.filter(l => DB.submissions[l.id]?.clo2?.saved).length;
+  const clo3Done = clo3Labs.filter(l => DB.submissions[l.id]?.clo3?.saved).length;
+
+  const p1 = clo1Labs.length ? Math.round(clo1Done/clo1Labs.length*100) : 0;
+  const p2 = clo2Labs.length ? Math.round(clo2Done/clo2Labs.length*100) : 0;
+  const p3 = clo3Labs.length ? Math.round(clo3Done/clo3Labs.length*100) : 0;
+
+  ['1','2','3'].forEach((n, i) => {
+    const p = [p1,p2,p3][i];
+    document.getElementById(`bar-clo${n}`).style.width = p + '%';
+    document.getElementById(`pct-clo${n}`).textContent = p + '%';
+  });
+}
+
+function renderProgressTab() {
+  // CLO attainment cards
+  const labsWithCLO = LABS.filter(l => l.clos.length > 0);
+  const cloData = ['CLO1','CLO2','CLO3'].map((clo,ci) => {
+    const relevant = labsWithCLO.filter(l => l.clos.includes(clo));
+    const saved = relevant.filter(l => {
+      const sub = DB.submissions[l.id];
+      if (clo === 'CLO1') return sub?.clo1?.saved;
+      if (clo === 'CLO2') return sub?.clo2?.saved;
+      return sub?.clo3?.saved;
+    }).length;
+    const pct = relevant.length ? Math.round(saved/relevant.length*100) : 0;
+    const cls = `c${ci+1}`;
+    const desc = ['Evaluate (C4)','Implement (C3)','Construct (C3)'][ci];
+    return { clo, pct, desc, cls, saved, total: relevant.length };
+  });
+
+  document.getElementById('clo-attain').innerHTML = cloData.map(d => `
+    <div class="clo-attain-card ${d.cls}">
+      <div class="clo-attain-num">${d.pct}%</div>
+      <div class="clo-attain-label">${d.clo} — ${d.desc}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${d.saved}/${d.total} labs</div>
+      <div class="clo-attain-bar-outer">
+        <div class="clo-attain-bar-fill" style="width:${d.pct}%"></div>
+      </div>
+    </div>`).join('');
+
+  // Stats
+  const doneLabs = Object.values(DB.submissions).filter(s => s.completed).length;
+  const totalSaved = Object.values(DB.submissions).filter(s =>
+    s.clo2?.saved || s.clo3?.saved).length;
+  const avgConf = computeAvgConfidenceDelta();
+  document.getElementById('stat-row').innerHTML = `
+    <div class="stat-card"><div class="stat-val" style="color:var(--clo2)">${doneLabs}</div><div class="stat-lbl">Labs Done</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--clo1)">${totalSaved}</div><div class="stat-lbl">Submissions</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--prelab)">${avgConf >= 0 ? '+' : ''}${avgConf}</div><div class="stat-lbl">Avg. Δ Conf.</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:var(--warn)">${computeMisconceptions()}</div><div class="stat-lbl">Flags</div></div>`;
+
+  // Lab progress grid
+  document.getElementById('progress-grid').innerHTML = LABS.map((lab, i) => {
+    const sub = DB.submissions[lab.id];
+    const isDone = sub?.completed;
+    const isActive = i === currentLabIdx;
+    const sections = ['clo1','clo2','clo3'];
+    const filled = sections.filter(s => sub?.[s]?.saved).length;
+    const pct = lab.clos.length === 0 ? 0 : Math.round(filled / Math.min(lab.clos.length, 3) * 100);
+    return `
+      <div class="prog-card ${isDone?'done':''} ${isActive?'active':''}" onclick="openLab(${i})">
+        <div class="pc-num">Lab ${lab.num}</div>
+        <div class="pc-title">${lab.short}</div>
+        <div class="pc-clo-pills">
+          ${lab.clos.map(c => `<span class="pc-pill ${c==='CLO1'?'c1':c==='CLO2'?'c2':'c3'}">${c}</span>`).join('')}
+          ${lab.clos.length === 0 ? '<span class="pc-pill" style="background:var(--surface3);color:var(--muted)">Setup</span>' : ''}
+        </div>
+        <div class="pc-bar"><div class="pc-bar-fill" style="width:${isDone?100:pct}%"></div></div>
+        <div class="pc-pct">${isDone ? '✓ Completed' : isActive ? `${pct}% — Active` : pct > 0 ? `${pct}% saved` : 'Not started'}</div>
+      </div>`;
+  }).join('');
+
+  // Confidence chart
+  renderConfidenceChart();
+  renderMisconceptions();
+}
+
+function computeAvgConfidenceDelta() {
+  const deltas = [];
+  Object.values(DB.submissions).forEach(sub => {
+    const b = sub.prelab?.confidence_before;
+    const a = sub.postlab?.confidence_after;
+    if (b !== null && b !== undefined && a !== null && a !== undefined) {
+      deltas.push(a - b);
+    }
+  });
+  if (!deltas.length) return 0;
+  return +(deltas.reduce((x,y)=>x+y,0)/deltas.length).toFixed(1);
+}
+
+function computeMisconceptions() {
+  // High confidence before (4) but difficulty hard = potential misconception flag
+  let count = 0;
+  Object.values(DB.submissions).forEach(sub => {
+    if (sub.prelab?.confidence_before === 4 && sub.clo2?.difficulty === 'hard') count++;
+    if (sub.clo1?.confidence === 4 && sub.clo2?.status === 'fail') count++;
+  });
+  return count;
+}
+
+function renderConfidenceChart() {
+  const rows = LABS.map(lab => {
+    const sub = DB.submissions[lab.id];
+    const b = sub?.prelab?.confidence_before;
+    const a = sub?.postlab?.confidence_after;
+    if (!b && !a) return null;
+    const be = b ? EMOJIS[b-1] : null;
+    const ae = a ? EMOJIS[a-1] : null;
+    const delta = (b && a) ? a - b : null;
+    return { lab, b, a, be, ae, delta };
+  }).filter(Boolean);
+
+  if (!rows.length) {
+    document.getElementById('confidence-chart').innerHTML =
+      '<p style="color:var(--muted);font-size:12px;padding:12px 0">No confidence data yet. Complete the Pre-Lab sections to see tracking here.</p>';
+    return;
+  }
+
+  document.getElementById('confidence-chart').innerHTML = `
+    <table>
+      <thead><tr>
+        <th>Lab</th><th>Before</th><th>After</th><th>Δ Change</th><th>Satisfaction</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map(r => {
+          const delta = r.delta;
+          const dClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'same';
+          const sat = DB.submissions[r.lab.id]?.postlab?.satisfaction;
+          const satE = sat ? SATISFACTION[sat-1] : null;
+          return `<tr>
+            <td><strong>Lab ${r.lab.num}</strong> — ${r.lab.short}</td>
+            <td>${r.be ? r.be.emoji + ' ' + r.be.label : '—'}</td>
+            <td>${r.ae ? r.ae.emoji + ' ' + r.ae.label : '—'}</td>
+            <td>${delta !== null ? `<span class="conf-delta ${dClass}">${delta>0?'+':''}${delta}</span>` : '—'}</td>
+            <td>${satE ? satE.emoji + ' ' + satE.label : '—'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderMisconceptions() {
+  const flags = [];
+  LABS.forEach(lab => {
+    const sub = DB.submissions[lab.id];
+    if (!sub) return;
+    // Flag: High confidence before but hard difficulty
+    if (sub.prelab?.confidence_before === 4 && sub.clo2?.difficulty === 'hard') {
+      flags.push({ lab, type: 'Overconfidence', detail: 'Rated confidence 😃 before lab, but found implementation Hard.', severity: 'warn' });
+    }
+    // Flag: High CLO1 confidence but failed execution
+    if (sub.clo1?.confidence === 4 && sub.clo2?.status === 'fail') {
+      flags.push({ lab, type: 'Method Misconception', detail: 'High confidence in method selection (CLO1) but code execution failed (CLO2). The chosen method may not have been understood well enough to implement.', severity: 'danger' });
+    }
+    // Flag: Confidence decreased
+    const b = sub.prelab?.confidence_before, a = sub.postlab?.confidence_after;
+    if (b && a && a < b) {
+      flags.push({ lab, type: 'Confidence Drop', detail: `Confidence decreased from ${EMOJIS[b-1].emoji} to ${EMOJIS[a-1].emoji} after the lab.`, severity: 'info' });
+    }
+  });
+
+  if (!flags.length) {
+    document.getElementById('misconception-list').innerHTML =
+      '<p style="color:var(--muted);font-size:12px;padding:12px 0">No flags detected yet. Complete more lab sections for analysis.</p>';
+    return;
+  }
+
+  document.getElementById('misconception-list').innerHTML = flags.map(f => `
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:12px 14px;margin-bottom:8px;border-left:3px solid ${f.severity==='danger'?'var(--danger)':f.severity==='warn'?'var(--warn)':'var(--clo1)'}">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+        <strong style="font-size:11px">Lab ${f.lab.num}: ${f.lab.short}</strong>
+        <span class="flag-misconception">${f.type}</span>
+      </div>
+      <div style="font-size:11px;color:var(--muted2);line-height:1.6">${f.detail}</div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+// EXPORT
+// ══════════════════════════════════════════════════════════════
+function exportData(format = 'csv') {
+  const rows = [];
+  LABS.forEach(lab => {
+    const sub = DB.submissions[lab.id];
+    if (!sub) return;
+    rows.push({
+      student_id: DB.student.id,
+      student_name: DB.student.name,
+      programme: DB.student.programme,
+      lab_id: lab.id,
+      lab_num: lab.num,
+      lab_title: lab.title,
+      clos: lab.clos.join('|'),
+      completed: sub.completed ? 1 : 0,
+      started_at: sub.started_at ? new Date(sub.started_at).toISOString() : '',
+      completed_at: sub.completed_at ? new Date(sub.completed_at).toISOString() : '',
+      // Affective
+      confidence_before: sub.prelab?.confidence_before ?? '',
+      prior_knowledge: sub.prelab?.prior_knowledge ?? '',
+      confidence_after: sub.postlab?.confidence_after ?? '',
+      satisfaction: sub.postlab?.satisfaction ?? '',
+      confidence_delta: (sub.prelab?.confidence_before && sub.postlab?.confidence_after)
+        ? sub.postlab.confidence_after - sub.prelab.confidence_before : '',
+      postlab_reflection: sub.postlab?.reflection ?? '',
+      // CLO1
+      clo1_method: sub.clo1?.method ?? '',
+      clo1_justification: sub.clo1?.justification ?? '',
+      clo1_confidence: sub.clo1?.confidence ?? '',
+      clo1_saved: sub.clo1?.saved ? 1 : 0,
+      // CLO2
+      clo2_code_length: (sub.clo2?.code ?? '').length,
+      clo2_output: sub.clo2?.output ?? '',
+      clo2_status: sub.clo2?.status ?? '',
+      clo2_difficulty: sub.clo2?.difficulty ?? '',
+      clo2_saved: sub.clo2?.saved ? 1 : 0,
+      // CLO3
+      clo3_script_length: (sub.clo3?.script ?? '').length,
+      clo3_approach: sub.clo3?.approach ?? '',
+      clo3_reflection: sub.clo3?.reflection ?? '',
+      clo3_saved: sub.clo3?.saved ? 1 : 0,
+    });
+  });
+
+  if (format === 'json') {
+    const blob = new Blob([JSON.stringify({ student: DB.student, submissions: rows }, null, 2)], { type: 'application/json' });
+    download(blob, `csc3206_lab_data_${DB.student.id || 'student'}.json`);
+  } else {
+    if (!rows.length) { showToast('No data to export yet'); return; }
+    const headers = Object.keys(rows[0]);
+    const csv = [headers.join(','),
+      ...rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g,'""')}"`).join(','))
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    download(blob, `csc3206_lab_data_${DB.student.id || 'student'}.csv`);
+  }
+  showToast('Export downloaded ✓');
+}
+
+function exportCLOReport() {
+  const rows = [];
+  LABS.filter(l => l.clos.length > 0).forEach(lab => {
+    const sub = DB.submissions[lab.id];
+    rows.push({
+      lab_id: lab.id, lab_num: lab.num, lab_title: lab.title,
+      student_id: DB.student.id, student_name: DB.student.name,
+      clo1_attained: sub?.clo1?.saved ? 1 : 0,
+      clo2_attained: sub?.clo2?.saved ? 1 : 0,
+      clo3_attained: sub?.clo3?.saved ? 1 : 0,
+      lab_completed: sub?.completed ? 1 : 0,
+    });
+  });
+  const h = Object.keys(rows[0] || {});
+  const csv = [h.join(','), ...rows.map(r => h.map(k => `"${r[k]}"`).join(','))].join('\n');
+  download(new Blob([csv], { type: 'text/csv' }), `clo_attainment_${DB.student.id || 'student'}.csv`);
+  showToast('CLO report exported ✓');
+}
+
+function exportAffective() {
+  const rows = LABS.map(lab => {
+    const sub = DB.submissions[lab.id];
+    return {
+      lab_id: lab.id, lab_title: lab.title,
+      student_id: DB.student.id,
+      confidence_before: sub?.prelab?.confidence_before ?? '',
+      confidence_after: sub?.postlab?.confidence_after ?? '',
+      delta: (sub?.prelab?.confidence_before && sub?.postlab?.confidence_after)
+        ? sub.postlab.confidence_after - sub.prelab.confidence_before : '',
+      satisfaction: sub?.postlab?.satisfaction ?? '',
+      difficulty: sub?.clo2?.difficulty ?? '',
+      clo1_confidence: sub?.clo1?.confidence ?? '',
+    };
+  });
+  const h = Object.keys(rows[0] || {});
+  const csv = [h.join(','), ...rows.map(r => h.map(k => `"${r[k]}"`).join(','))].join('\n');
+  download(new Blob([csv], { type: 'text/csv' }), `affective_data_${DB.student.id || 'student'}.csv`);
+  showToast('Affective data exported ✓');
+}
+
+function download(blob, filename) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// ══════════════════════════════════════════════════════════════
+// UI HELPERS
+// ══════════════════════════════════════════════════════════════
+function switchMainTab(tab) {
+  const tabs = ['lab','manual','progress','export'];
+  document.querySelectorAll('.tab').forEach((el, i) => el.classList.toggle('active', tabs[i] === tab));
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab)?.classList.add('active');
+  if (tab === 'progress') renderProgressTab();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function copyCode(btn) {
+  const pre = btn.closest('.code-block').querySelector('pre');
+  navigator.clipboard.writeText(pre.innerText).catch(() => {});
+  btn.textContent = 'copied!';
+  setTimeout(() => btn.textContent = 'copy', 1500);
+}
+
+// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// MANUAL CONTENT RENDERER
+// ══════════════════════════════════════════════════════════════
+const LAB_MANUALS = {
+
+'lab0': `
+<div class="manual-section">
+<div class="manual-sec-title">Getting Started</div>
+<div class="manual-prose">The lab for CSC3206 Artificial Intelligence uses Python as the programming language. The <strong>Anaconda distribution</strong> is recommended as it is more beginner-friendly for installing packages and managing environments.</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Installation</div>
+<div class="manual-steps">
+<div class="manual-step"><div class="ms-num">1.</div><div class="ms-text">Download the Anaconda installer with Python 3 for your system from <a href="https://www.anaconda.com/download" target="_blank" style="color:var(--clo1)">anaconda.com/download</a>.</div></div>
+<div class="manual-step"><div class="ms-num">2.</div><div class="ms-text">Use the graphical installer to install Anaconda.</div></div>
+</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Launching Spyder IDE</div>
+<div class="manual-steps">
+<div class="manual-step"><div class="ms-num">1.</div><div class="ms-text">Start the Anaconda Navigator from your application list.</div></div>
+<div class="manual-step"><div class="ms-num">2.</div><div class="ms-text">From the Anaconda <code>base</code> environment, launch <strong>Spyder IDE</strong>.</div></div>
+<div class="manual-step"><div class="ms-num">3.</div><div class="ms-text">The Spyder IDE consists of three parts: the <strong>editor</strong>, the <strong>variable explorer</strong>, and the <strong>IPython Console</strong>.</div></div>
+<div class="manual-step"><div class="ms-num">4.</div><div class="ms-text">The editor is where you write your code.</div></div>
+<div class="manual-step"><div class="ms-num">5.</div><div class="ms-text">The variable explorer shows the value of variables after running the code.</div></div>
+<div class="manual-step"><div class="ms-num">6.</div><div class="ms-text">The IPython console allows you to execute commands, interact with the running code, and display visualisations.</div></div>
+<div class="manual-step"><div class="ms-num">7.</div><div class="ms-text">After writing your code in the editor, execute it using <code>F5</code> to run the file.</div></div>
+<div class="manual-step"><div class="ms-num">8.</div><div class="ms-text">Variables and their values can then be found in the variable explorer.</div></div>
+</div>
+</div>`,
+
+'lab1': `
+<div class="manual-section">
+<div class="manual-sec-title">Objective</div>
+<div class="manual-prose">To understand basic syntax of the Python programming language.</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Declare a Variable</div>
+<div class="manual-note"><div class="mn-label">Key Concept</div><strong>Strongly typed</strong>: the type of a variable does not change unexpectedly. <strong>Dynamically typed</strong>: the type of a variable can change when a value of a different type is assigned. No explicit type declaration is needed in Python.</div>
+<div class="manual-steps">
+<div class="manual-step"><div class="ms-num">1.</div><div class="ms-text">Define a variable <code>val</code> and assign the value <code>'a'</code>. The type can be viewed in the variable explorer: <div class="code-block" style="margin-top:8px"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div><pre>val = <span class="str">'a'</span></pre></div></div></div>
+<div class="manual-step"><div class="ms-num">2.</div><div class="ms-text">Assign the value <code>1</code> to the same variable — it now becomes type <code>int</code> instead of <code>str</code>: <div class="code-block" style="margin-top:8px"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div><pre>val = <span class="num">1</span></pre></div></div></div>
+</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Array Manipulation</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre>arr = []                        <span class="cm"># empty array</span>
+arr = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>]          <span class="cm"># numbers</span>
+arr = [<span class="str">'a'</span>,<span class="str">'b'</span>,<span class="str">'c'</span>,<span class="str">'d'</span>,<span class="str">'e'</span>]    <span class="cm"># alphabets</span>
+arr = [<span class="num">1</span>,<span class="str">'a'</span>,<span class="num">2</span>,<span class="str">'b'</span>,<span class="num">3</span>,<span class="str">'c'</span>]    <span class="cm"># mixed types</span>
+
+<span class="cm"># Zero-indexed: arr[0] = 1, arr[1] = 'a'</span>
+<span class="cm"># Negative indexing: arr[-1] = 'c' (last element)</span>
+<span class="cm"># Slicing: arr[start:end:step]</span>
+arr[<span class="num">1</span>:<span class="num">5</span>]     <span class="cm"># ['a', 2, 'b', 3]</span>
+arr[<span class="num">1</span>:<span class="num">5</span>:<span class="num">2</span>]   <span class="cm"># ['a', 'b']</span>
+arr[:<span class="num">3</span>]      <span class="cm"># [1, 'a', 2]</span>
+
+<span class="cm"># Modify arrays</span>
+arr.<span class="fn">append</span>(<span class="num">4</span>)              <span class="cm"># add one element to end</span>
+arr.<span class="fn">extend</span>([<span class="str">'d'</span>,<span class="num">5</span>,<span class="str">'e'</span>])   <span class="cm"># add multiple elements</span>
+arr[<span class="num">0</span>] = <span class="num">0</span>                 <span class="cm"># assign value at index</span>
+arr.<span class="fn">insert</span>(<span class="num">1</span>, <span class="num">1</span>)           <span class="cm"># insert at index</span>
+<span class="kw">del</span> arr[<span class="num">0</span>]                 <span class="cm"># remove at index</span>
+
+joint_arr = <span class="fn">list</span>(<span class="fn">zip</span>([<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>],[<span class="str">'a'</span>,<span class="str">'b'</span>,<span class="str">'c'</span>]))
+<span class="cm"># [(1,'a'),(2,'b'),(3,'c')]</span></pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Loops</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="cm"># for loop</span>
+<span class="kw">for</span> a <span class="kw">in</span> arr:
+    <span class="fn">print</span>(a)
+
+<span class="cm"># zip — loop two arrays at once</span>
+<span class="kw">for</span> item <span class="kw">in</span> <span class="fn">zip</span>([<span class="str">'a'</span>,<span class="str">'b'</span>],[<span class="str">'artificial'</span>,<span class="str">'breadth'</span>]):
+    <span class="fn">print</span>(item[<span class="num">0</span>] + <span class="str">' for '</span> + item[<span class="num">1</span>])
+
+<span class="cm"># enumerate — get index and value</span>
+<span class="kw">for</span> (index, item) <span class="kw">in</span> <span class="fn">enumerate</span>([<span class="str">'a'</span>,<span class="str">'b'</span>,<span class="str">'c'</span>,<span class="str">'d'</span>]):
+    <span class="fn">print</span>(<span class="str">'Index of '</span> + item + <span class="str">' is: '</span> + <span class="fn">str</span>(index))
+
+<span class="cm"># loop a dict</span>
+x_dict = {<span class="str">'d'</span>:<span class="str">'depth'</span>, <span class="str">'e'</span>:<span class="str">'estimation'</span>, <span class="str">'f'</span>:<span class="str">'frontier'</span>}
+<span class="kw">for</span> key, value <span class="kw">in</span> x_dict.<span class="fn">items</span>():
+    <span class="fn">print</span>(key + <span class="str">' for '</span> + value)
+
+<span class="cm"># while loop</span>
+x = <span class="num">0</span>
+<span class="kw">while</span> x != <span class="num">10</span>:
+    x += <span class="num">1</span>
+    <span class="fn">print</span>(x)</pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Conditions</div>
+<table class="manual-table"><thead><tr><th>Operator</th><th>Definition</th></tr></thead><tbody>
+<tr><td><code>==</code></td><td>Equivalence</td></tr>
+<tr><td><code>!=</code></td><td>Inequivalence</td></tr>
+<tr><td><code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code>, <code>&gt;=</code></td><td>Comparisons</td></tr>
+<tr><td><code>is</code></td><td>Equivalence (text form)</td></tr>
+<tr><td><code>not</code></td><td>Inequivalence (text form)</td></tr>
+<tr><td><code>and</code>, <code>or</code></td><td>Combine conditions</td></tr>
+</tbody></table>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">User-Defined Functions</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="cm"># Basic function</span>
+<span class="kw">def</span> <span class="fn">custom_fcn</span>():
+    <span class="fn">print</span>(<span class="str">'This is a custom function'</span>)
+
+<span class="cm"># With required argument</span>
+<span class="kw">def</span> <span class="fn">custom_fcn</span>(msg):
+    <span class="fn">print</span>(<span class="str">'Display: '</span> + msg)
+
+<span class="cm"># With optional argument (default value)</span>
+<span class="kw">def</span> <span class="fn">custom_fcn</span>(msg=<span class="str">'default message'</span>):
+    <span class="fn">print</span>(<span class="str">'Display: '</span> + msg)
+
+custom_fcn(msg=<span class="str">'new message'</span>)  <span class="cm"># named argument</span></pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Exercise</div>
+<div class="manual-task"><div class="mn-label">// Exercise</div>
+<strong>1.</strong> Create a variable <code>friends</code> as a nested array containing name, home country, and home state of 10 friends.<br>
+<code>friends = [["James","Malaysia","Malacca"],["Goh","Australia","Brisbane"],...]</code><br><br>
+<strong>2.</strong> Create a function <code>filterFriend(name="", home_country="", home_state="")</code> that filters <code>friends</code> based on provided arguments. Ignore empty string arguments.<br><br>
+e.g. <code>filterFriend(home_country="Malaysia")</code> → returns all Malaysian friends.
+</div>
+</div>`,
+
+'lab2': `
+<div class="manual-section">
+<div class="manual-sec-title">Lab Learning Outcome</div>
+<div class="manual-prose">Create a Python script to execute <strong>breadth-first search (BFS)</strong> algorithm to solve a route-finding search problem.</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">State Representation</div>
+<div class="manual-prose">In Nick's route-finding problem in Romania (Arad → Bucharest), the only state is the location of Nick. We use city names as states.</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre>initial_state = <span class="str">"Arad"</span>
+goal_state    = <span class="str">"Bucharest"</span>
+
+state_space = [
+  [<span class="str">'Arad'</span>,      <span class="str">'Zerind'</span>,          <span class="num">75</span>],
+  [<span class="str">'Arad'</span>,      <span class="str">'Timisoara'</span>,       <span class="num">118</span>],
+  [<span class="str">'Arad'</span>,      <span class="str">'Sibiu'</span>,           <span class="num">140</span>],
+  [<span class="str">'Zerind'</span>,    <span class="str">'Oradea'</span>,          <span class="num">71</span>],
+  [<span class="str">'Oradea'</span>,    <span class="str">'Sibiu'</span>,           <span class="num">151</span>],
+  [<span class="str">'Timisoara'</span>, <span class="str">'Lugoj'</span>,           <span class="num">111</span>],
+  [<span class="str">'Lugoj'</span>,     <span class="str">'Mehadia'</span>,         <span class="num">70</span>],
+  [<span class="str">'Mehadia'</span>,   <span class="str">'Drobeta'</span>,         <span class="num">75</span>],
+  [<span class="str">'Drobeta'</span>,   <span class="str">'Craiova'</span>,         <span class="num">120</span>],
+  [<span class="str">'Sibiu'</span>,     <span class="str">'Rimnicu Vilcea'</span>,  <span class="num">80</span>],
+  [<span class="str">'Sibiu'</span>,     <span class="str">'Fagaras'</span>,         <span class="num">99</span>],
+  [<span class="str">'Rimnicu Vilcea'</span>, <span class="str">'Pitesti'</span>,    <span class="num">97</span>],
+  [<span class="str">'Rimnicu Vilcea'</span>, <span class="str">'Craiova'</span>,    <span class="num">146</span>],
+  [<span class="str">'Fagaras'</span>,   <span class="str">'Bucharest'</span>,      <span class="num">211</span>],
+  [<span class="str">'Pitesti'</span>,   <span class="str">'Bucharest'</span>,      <span class="num">101</span>],
+  [<span class="str">'Pitesti'</span>,   <span class="str">'Craiova'</span>,        <span class="num">138</span>],
+  [<span class="str">'Bucharest'</span>, <span class="str">'Giurgiu'</span>,         <span class="num">90</span>],
+  [<span class="str">'Bucharest'</span>, <span class="str">'Urziceni'</span>,        <span class="num">85</span>],
+  [<span class="str">'Urziceni'</span>,  <span class="str">'Vaslui'</span>,         <span class="num">142</span>],
+  [<span class="str">'Urziceni'</span>,  <span class="str">'Hirsova'</span>,         <span class="num">98</span>],
+  [<span class="str">'Hirsova'</span>,   <span class="str">'Eforie'</span>,          <span class="num">86</span>],
+  [<span class="str">'Vaslui'</span>,    <span class="str">'Iasi'</span>,            <span class="num">92</span>],
+  [<span class="str">'Iasi'</span>,      <span class="str">'Neamt'</span>,           <span class="num">87</span>],
+]</pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Node Class &amp; expandAndReturnChildren</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">class</span> <span class="cls">Node</span>:
+  <span class="kw">def</span> <span class="fn">__init__</span>(self, state=<span class="kw">None</span>, parent=<span class="kw">None</span>):
+    self.state  = state
+    self.parent = parent
+
+<span class="kw">def</span> <span class="fn">expandAndReturnChildren</span>(state_space, node):
+  children = []
+  <span class="kw">for</span> [m, n, c] <span class="kw">in</span> state_space:
+    <span class="kw">if</span>   m == node.state: children.<span class="fn">append</span>(<span class="cls">Node</span>(n, node))
+    <span class="kw">elif</span> n == node.state: children.<span class="fn">append</span>(<span class="cls">Node</span>(m, node))
+  <span class="kw">return</span> children</pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">BFS Algorithm</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">def</span> <span class="fn">bfs</span>(state_space, initial_state, goal_state):
+  frontier  = []
+  explored  = []
+  found_goal = <span class="kw">False</span>
+  frontier.<span class="fn">append</span>(<span class="cls">Node</span>(initial_state, <span class="kw">None</span>))
+
+  <span class="kw">while not</span> found_goal:
+    children = <span class="fn">expandAndReturnChildren</span>(state_space, frontier[<span class="num">0</span>])
+    explored.<span class="fn">append</span>(frontier[<span class="num">0</span>])
+    <span class="kw">del</span> frontier[<span class="num">0</span>]
+    <span class="kw">for</span> child <span class="kw">in</span> children:
+      in_exp = child.state <span class="kw">in</span> [e.state <span class="kw">for</span> e <span class="kw">in</span> explored]
+      in_fr  = child.state <span class="kw">in</span> [f.state <span class="kw">for</span> f <span class="kw">in</span> frontier]
+      <span class="kw">if not</span> in_exp <span class="kw">and not</span> in_fr:
+        <span class="kw">if</span> child.state == goal_state:
+          found_goal = <span class="kw">True</span>
+          goal_node  = child
+          <span class="kw">break</span>
+        frontier.<span class="fn">append</span>(child)
+
+  solution   = [goal_node.state]
+  trace_node = goal_node
+  <span class="kw">while</span> trace_node.parent <span class="kw">is not None</span>:
+    solution.<span class="fn">insert</span>(<span class="num">0</span>, trace_node.parent.state)
+    trace_node = trace_node.parent
+  <span class="kw">return</span> solution
+
+<span class="kw">if</span> __name__ == <span class="str">'__main__'</span>:
+  <span class="fn">print</span>(<span class="str">'Solution: '</span> + <span class="fn">str</span>(<span class="fn">bfs</span>(state_space, initial_state, goal_state)))</pre></div>
+<div class="manual-note"><div class="mn-label">// Preparation for next week</div>How would you modify this code for Uniform-Cost Search or Depth-First Search? Which part(s) need to change?</div>
+</div>`,
+
+'lab3': `
+<div class="manual-section">
+<div class="manual-sec-title">Objective</div>
+<div class="manual-prose">Create a Python script to execute <strong>uniform-cost search (UCS)</strong> algorithm. UCS finds the minimum-cost path by always expanding the frontier node with the lowest accumulated path cost.</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Key Changes from BFS</div>
+<div class="manual-note"><div class="mn-label">// UCS vs BFS</div>UCS changes the frontier ordering: sorted by <strong>accumulated path cost g(n)</strong>. The node with lowest g(n) is expanded first. Goal test moves to <strong>expansion time</strong>, not generation time.</div>
+<div class="manual-steps">
+<div class="manual-step"><div class="ms-num">1.</div><div class="ms-text">Add code to <strong>sort the frontier</strong> by path cost up to the leaf node after adding each child.</div></div>
+<div class="manual-step"><div class="ms-num">2.</div><div class="ms-text">If a latter-found node has the same state as an <strong>explored</strong> node → discard it.</div></div>
+<div class="manual-step"><div class="ms-num">3.</div><div class="ms-text">If a latter-found node has the same state as a <strong>frontier</strong> node but <strong>lower cost</strong> → replace it.</div></div>
+<div class="manual-step"><div class="ms-num">4.</div><div class="ms-text">Apply goal test at <strong>expansion</strong> (not generation).</div></div>
+</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="cm"># Update Node class to include path_cost</span>
+<span class="kw">class</span> <span class="cls">Node</span>:
+  <span class="kw">def</span> <span class="fn">__init__</span>(self, state=<span class="kw">None</span>, parent=<span class="kw">None</span>, path_cost=<span class="num">0</span>):
+    self.state     = state
+    self.parent    = parent
+    self.path_cost = path_cost
+
+<span class="cm"># In expandAndReturnChildren: accumulate edge cost</span>
+<span class="kw">for</span> [m, n, c] <span class="kw">in</span> state_space:
+  <span class="kw">if</span> m == node.state:
+    children.<span class="fn">append</span>(<span class="cls">Node</span>(n, node, node.path_cost + c))
+
+<span class="cm"># Sort frontier after adding children</span>
+frontier.<span class="fn">sort</span>(key=<span class="kw">lambda</span> node: node.path_cost)
+
+<span class="cm"># Goal test at EXPANSION (pop from frontier first):</span>
+node = frontier.<span class="fn">pop</span>(<span class="num">0</span>)
+<span class="kw">if</span> node.state == goal_state:
+  <span class="cm"># build and return solution</span>
+  ...</pre></div>
+<div class="manual-tip"><div class="mn-label">// Execute & Verify</div>Run the program and investigate if it finds the optimal path. The optimal Arad→Bucharest cost is <strong>418 km</strong>.</div>
+</div>`,
+
+'lab4': `
+<div class="manual-section">
+<div class="manual-sec-title">Objectives</div>
+<div class="manual-steps">
+<div class="manual-step"><div class="ms-num">1.</div><div class="ms-text">To represent the state of a vacuum world.</div></div>
+<div class="manual-step"><div class="ms-num">2.</div><div class="ms-text">To solve the vacuum world problem using breadth-first search.</div></div>
+</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Problem</div>
+<div class="manual-prose">A two-square vacuum world has a robot that can be in either the <strong>left</strong> or <strong>right</strong> square, and each square can be <strong>clean</strong> or <strong>dirty</strong>. Available actions: <code>left</code>, <code>right</code>, <code>suck</code> (all equal cost).</div>
+<div class="manual-task"><div class="mn-label">// Think First</div>
+<strong>1.</strong> How could we represent the state? (What information must be captured?)<br>
+<strong>2.</strong> Do we need to define the whole state space statically? Or can a transition function generate children dynamically?<br>
+<strong>3.</strong> How do we define the transition model? Implement as <code>transition(state, action) → result_state</code>.
+</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="cm"># State: (robot_pos, left_dirty, right_dirty)</span>
+initial_state = (<span class="str">'L'</span>, <span class="kw">True</span>, <span class="kw">True</span>)   <span class="cm"># both dirty, robot on left</span>
+
+<span class="kw">def</span> <span class="fn">is_goal</span>(state):
+  <span class="kw">return</span> state[<span class="num">1</span>] == <span class="kw">False</span> <span class="kw">and</span> state[<span class="num">2</span>] == <span class="kw">False</span>
+
+<span class="kw">def</span> <span class="fn">transition</span>(state, action):
+  pos, left, right = state
+  <span class="kw">if</span>   action == <span class="str">'left'</span>:  <span class="kw">return</span> (<span class="str">'L'</span>, left, right)
+  <span class="kw">elif</span> action == <span class="str">'right'</span>: <span class="kw">return</span> (<span class="str">'R'</span>, left, right)
+  <span class="kw">elif</span> action == <span class="str">'suck'</span>:
+    <span class="kw">if</span>   pos == <span class="str">'L'</span>: <span class="kw">return</span> (<span class="str">'L'</span>, <span class="kw">False</span>, right)
+    <span class="kw">else</span>:            <span class="kw">return</span> (<span class="str">'R'</span>, left, <span class="kw">False</span>)
+
+actions = [<span class="str">'left'</span>, <span class="str">'right'</span>, <span class="str">'suck'</span>]
+
+<span class="cm"># In expandAndReturnChildren — use transition instead of state_space:</span>
+<span class="kw">def</span> <span class="fn">expandAndReturnChildren</span>(node):
+  children = []
+  <span class="kw">for</span> action <span class="kw">in</span> actions:
+    new_state = <span class="fn">transition</span>(node.state, action)
+    children.<span class="fn">append</span>(<span class="cls">Node</span>(new_state, node))
+  <span class="kw">return</span> children</pre></div>
+<div class="manual-tip"><div class="mn-label">// Execute & Verify</div>Create the code to solve the vacuum world problem using BFS. Execute it and verify it works correctly.</div>
+</div>`,
+
+'lab5': `
+<div class="manual-section">
+<div class="manual-sec-title">Objective</div>
+<div class="manual-prose">To learn the basics of the <strong>pandas</strong> Python library for data manipulation and analysis.</div>
+<div class="manual-note"><div class="mn-label">// Instruction</div>For all sections except the last, use the <strong>IPython console</strong> (bottom right in Spyder) to run the codes interactively.</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Data Structures</div>
+<table class="manual-table"><thead><tr><th>Structure</th><th>Description</th></tr></thead><tbody>
+<tr><td><strong>Series</strong></td><td>1D labeled homogeneously-typed array</td></tr>
+<tr><td><strong>DataFrame</strong></td><td>General 2D labeled, size-mutable tabular structure with potentially heterogeneously-typed columns</td></tr>
+</tbody></table>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Imports &amp; Series</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> numpy  <span class="kw">as</span> np
+
+<span class="cm"># Series from list</span>
+s1 = pd.<span class="fn">Series</span>([<span class="num">1</span>, <span class="num">3</span>, <span class="num">5</span>, np.nan, <span class="num">6</span>, <span class="num">8</span>])
+s2 = pd.<span class="fn">Series</span>([<span class="num">1</span>, <span class="num">3</span>, <span class="num">5</span>, np.nan, <span class="num">6</span>, <span class="num">8</span>], index=[<span class="num">1</span>,<span class="num">2</span>,<span class="num">3</span>,<span class="num">4</span>,<span class="num">5</span>,<span class="str">'f'</span>])
+<span class="cm"># Series from dict</span>
+d  = {<span class="str">'a'</span>:<span class="num">1</span>, <span class="str">'b'</span>:<span class="num">2</span>, <span class="str">'c'</span>:<span class="num">3</span>}
+s3 = pd.<span class="fn">Series</span>(d)
+<span class="cm"># Series from scalar</span>
+s4 = pd.<span class="fn">Series</span>(<span class="num">5</span>, index=[<span class="str">'a'</span>,<span class="str">'b'</span>,<span class="str">'c'</span>,<span class="str">'d'</span>,<span class="str">'e'</span>])</pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">DataFrame</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="cm"># From NumPy array</span>
+df = pd.<span class="fn">DataFrame</span>(np.random.<span class="fn">randn</span>(<span class="num">6</span>,<span class="num">4</span>),
+                   index=<span class="fn">list</span>(<span class="str">'abcdef'</span>), columns=<span class="fn">list</span>(<span class="str">'ABCD'</span>))
+
+df.<span class="fn">head</span>()         <span class="cm"># first 5 rows</span>
+df.<span class="fn">describe</span>()     <span class="cm"># statistical summary</span>
+df.index          <span class="cm"># row indices</span>
+df.columns        <span class="cm"># column names</span>
+df[<span class="str">'A'</span>]           <span class="cm"># select column</span>
+df[[<span class="str">'A'</span>,<span class="str">'B'</span>]]     <span class="cm"># multiple columns</span>
+
+<span class="cm"># Selection by label (.loc)</span>
+df.loc[<span class="str">'a'</span>]
+df.loc[<span class="str">'a'</span>:<span class="str">'c'</span>, [<span class="str">'A'</span>,<span class="str">'B'</span>]]
+
+<span class="cm"># Selection by position (.iloc)</span>
+df.iloc[<span class="num">0</span>:<span class="num">3</span>, [<span class="num">0</span>,<span class="num">1</span>]]
+
+<span class="cm"># Boolean indexing</span>
+df[df.A > <span class="num">0</span>]
+df[df > <span class="num">0</span>]
+
+<span class="cm"># Filter with .isin()</span>
+df2 = df.<span class="fn">copy</span>()
+df2[<span class="str">'E'</span>] = [<span class="str">'one'</span>,<span class="str">'one'</span>,<span class="str">'two'</span>,<span class="str">'three'</span>,<span class="str">'four'</span>,<span class="str">'three'</span>]
+df2[df2[<span class="str">'E'</span>].<span class="fn">isin</span>([<span class="str">'two'</span>,<span class="str">'four'</span>])]</pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Data Manipulation Exercise</div>
+<div class="manual-task"><div class="mn-label">// Exercise</div>
+Go to <a href="https://archive.ics.uci.edu/ml/datasets/Iris" target="_blank" style="color:var(--clo1)">UCI ML Repository</a> and download <code>iris.data</code> and <code>iris.names</code>.<br><br>
+1. Load <code>iris.data</code> as a DataFrame.<br>
+2. Update column names from <code>iris.names</code>.<br>
+3. Calculate mean, min, max, and std for each column.<br>
+4. Create: <code>df['class value'] = pd.factorize(df['class'])[0]</code><br>
+5. Group by class using <code>.groupby()</code>.<br>
+6. Identify the function to extract each group by name.<br>
+7. Calculate per-class statistics.<br>
+8. Produce a scatter plot of any two columns using matplotlib.<br>
+9. Identify at least 2 methods to iterate through a DataFrame row by row.
+</div>
+</div>`,
+
+'lab6': `
+<div class="manual-section">
+<div class="manual-sec-title">Objectives</div>
+<div class="manual-steps">
+<div class="manual-step"><div class="ms-num">1.</div><div class="ms-text">To develop the script to perform gradient descent on linear regression model with least squares method using Python.</div></div>
+<div class="manual-step"><div class="ms-num">2.</div><div class="ms-text">To train a linear regression model with least squares method using the <code>scikit-learn</code> Python library.</div></div>
+</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Dataset</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">from</span> sklearn <span class="kw">import</span> datasets
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+diabetes = datasets.<span class="fn">load_diabetes</span>()
+<span class="fn">print</span>(diabetes.DESCR)   <span class="cm"># view description</span>
+
+dt = pd.<span class="fn">DataFrame</span>(diabetes.data, columns=diabetes.feature_names)
+y  = pd.<span class="fn">DataFrame</span>(diabetes.target, columns=[<span class="str">'target'</span>])</pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Gradient Descent — Define Functions</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+
+X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(dt, y, test_size=<span class="num">0.2</span>)
+
+<span class="cm"># Task: Use train_test_split for 80-20 split</span>
+
+<span class="kw">def</span> <span class="fn">model</span>(x, m, c):
+  <span class="kw">return</span> m * x + c
+
+<span class="kw">def</span> <span class="fn">cost</span>(y, yh):
+  <span class="cm"># J = (1/n) * sum((y - yh)^2)</span>
+  <span class="kw">return</span> (<span class="num">1</span> / <span class="fn">len</span>(y)) * ((y - yh) ** <span class="num">2</span>).<span class="fn">sum</span>()
+
+<span class="kw">def</span> <span class="fn">derivatives</span>(x, y, yh):
+  n = <span class="fn">len</span>(y)
+  <span class="kw">return</span> {
+    <span class="str">'m'</span>: (-<span class="num">2</span>/n) * (x * (y - yh)).<span class="fn">sum</span>(),
+    <span class="str">'c'</span>: (-<span class="num">2</span>/n) * (y - yh).<span class="fn">sum</span>()
+  }</pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Gradient Descent Loop</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre>learningrate = <span class="num">0.1</span>
+m = []; c = []; J = []
+m.<span class="fn">append</span>(<span class="num">0</span>); c.<span class="fn">append</span>(<span class="num">0</span>)
+J.<span class="fn">append</span>(<span class="fn">cost</span>(y_train[<span class="str">'target'</span>],
+  X_train[<span class="str">'bmi'</span>].<span class="fn">apply</span>(<span class="kw">lambda</span> x: <span class="fn">model</span>(x, m[-<span class="num">1</span>], c[-<span class="num">1</span>]))))
+
+J_min = <span class="num">0.01</span>; del_J_min = <span class="num">0.0001</span>; max_iter = <span class="num">10000</span>
+
+<span class="kw">while True</span>:
+  <span class="kw">if</span> J[-<span class="num">1</span>] < J_min: <span class="kw">break</span>
+  <span class="kw">if</span> <span class="fn">len</span>(J) > <span class="num">1</span> <span class="kw">and</span> <span class="fn">abs</span>(J[-<span class="num">1</span>]-J[-<span class="num">2</span>])/J[-<span class="num">2</span>] < del_J_min: <span class="kw">break</span>
+  <span class="kw">if</span> <span class="fn">len</span>(J) >= max_iter: <span class="kw">break</span>
+  yh = X_train[<span class="str">'bmi'</span>].<span class="fn">apply</span>(<span class="kw">lambda</span> x: <span class="fn">model</span>(x, m[-<span class="num">1</span>], c[-<span class="num">1</span>]))
+  d  = <span class="fn">derivatives</span>(X_train[<span class="str">'bmi'</span>], y_train[<span class="str">'target'</span>], yh)
+  m.<span class="fn">append</span>(m[-<span class="num">1</span>] - learningrate * d[<span class="str">'m'</span>])
+  c.<span class="fn">append</span>(c[-<span class="num">1</span>] - learningrate * d[<span class="str">'c'</span>])
+  J.<span class="fn">append</span>(<span class="fn">cost</span>(y_train[<span class="str">'target'</span>], yh))</pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">scikit-learn LinearRegression</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">from</span> sklearn <span class="kw">import</span> linear_model
+regrmodel = linear_model.<span class="cls">LinearRegression</span>()
+regrmodel.<span class="fn">fit</span>(X_train[[<span class="str">'bmi'</span>]], y_train[<span class="str">'target'</span>])
+y_train_pred = regrmodel.<span class="fn">predict</span>(X_train[[<span class="str">'bmi'</span>]])
+y_test_pred  = regrmodel.<span class="fn">predict</span>(X_test[[<span class="str">'bmi'</span>]])
+<span class="fn">print</span>(<span class="str">f'  m {regrmodel.coef_}'</span>)
+<span class="fn">print</span>(<span class="str">f'  c {regrmodel.intercept_}'</span>)</pre></div>
+<div class="manual-tip"><div class="mn-label">// Multivariate</div>For multivariate linear regression using bmi and bp: change <code>X_...[['bmi']]</code> to <code>X_...[['bmi','bp']]</code>. Visualise with a 3D plot using <code>mpl_toolkits.mplot3d</code>.</div>
+</div>`,
+
+'lab7': `
+<div class="manual-section">
+<div class="manual-sec-title">Objective</div>
+<div class="manual-prose">To perform <strong>k nearest neighbours</strong> algorithm with the scikit-learn Python library for classification and regression.</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Datasets</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">from</span> sklearn <span class="kw">import</span> datasets
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+iris = datasets.<span class="fn">load_iris</span>()
+iris = {
+  <span class="str">'attributes'</span>:  pd.<span class="fn">DataFrame</span>(iris.data, columns=iris.feature_names),
+  <span class="str">'target'</span>:      pd.<span class="fn">DataFrame</span>(iris.target, columns=[<span class="str">'species'</span>]),
+  <span class="str">'targetNames'</span>: iris.target_names
+}
+diabetes = datasets.<span class="fn">load_diabetes</span>()
+diabetes = {
+  <span class="str">'attributes'</span>: pd.<span class="fn">DataFrame</span>(diabetes.data, columns=diabetes.feature_names),
+  <span class="str">'target'</span>:     pd.<span class="fn">DataFrame</span>(diabetes.target, columns=[<span class="str">'diseaseProgression'</span>])
+}
+
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">for</span> dt <span class="kw">in</span> [iris, diabetes]:
+  x_train, x_test, y_train, y_test = <span class="fn">train_test_split</span>(
+    dt[<span class="str">'attributes'</span>], dt[<span class="str">'target'</span>], test_size=<span class="num">0.2</span>, random_state=<span class="num">1</span>)
+  dt[<span class="str">'train'</span>] = {<span class="str">'attributes'</span>: x_train, <span class="str">'target'</span>: y_train}
+  dt[<span class="str">'test'</span>]  = {<span class="str">'attributes'</span>: x_test,  <span class="str">'target'</span>: y_test}</pre></div>
+<div class="manual-task"><div class="mn-label">// Task</div>How do we access the training input data for the iris dataset?</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">KNN — Classification</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">from</span> sklearn.neighbors <span class="kw">import</span> KNeighborsClassifier
+knc = <span class="cls">KNeighborsClassifier</span>(<span class="num">5</span>)
+
+input_columns = iris[<span class="str">'attributes'</span>].columns[:<span class="num">2</span>].<span class="fn">tolist</span>()
+x_train = iris[<span class="str">'train'</span>][<span class="str">'attributes'</span>][input_columns]
+y_train = iris[<span class="str">'train'</span>][<span class="str">'target'</span>].species
+knc.<span class="fn">fit</span>(x_train, y_train)
+
+x_test    = iris[<span class="str">'test'</span>][<span class="str">'attributes'</span>][input_columns]
+y_test    = iris[<span class="str">'test'</span>][<span class="str">'target'</span>].species
+y_predict = knc.<span class="fn">predict</span>(x_test)
+
+<span class="fn">print</span>(pd.<span class="fn">DataFrame</span>(<span class="fn">list</span>(<span class="fn">zip</span>(y_test, y_predict)), columns=[<span class="str">'target'</span>,<span class="str">'predicted'</span>]))
+<span class="fn">print</span>(<span class="str">f'Accuracy: {knc.score(x_test, y_test):.4f}'</span>)
+
+<span class="cm"># Visualisation</span>
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> matplotlib <span class="kw">import</span> cm
+<span class="kw">from</span> matplotlib.colors <span class="kw">import</span> ListedColormap
+
+colormap = cm.<span class="fn">get_cmap</span>(<span class="str">'tab20'</span>)
+cm_dark  = <span class="cls">ListedColormap</span>(colormap.colors[::<span class="num">2</span>])
+cm_light = <span class="cls">ListedColormap</span>(colormap.colors[<span class="num">1</span>::<span class="num">2</span>])
+
+x_min = iris[<span class="str">'attributes'</span>][input_columns[<span class="num">0</span>]].<span class="fn">min</span>()
+x_max = iris[<span class="str">'attributes'</span>][input_columns[<span class="num">0</span>]].<span class="fn">max</span>()
+x_range = x_max - x_min; x_min -= <span class="num">0.1</span>*x_range; x_max += <span class="num">0.1</span>*x_range
+y_min = iris[<span class="str">'attributes'</span>][input_columns[<span class="num">1</span>]].<span class="fn">min</span>()
+y_max = iris[<span class="str">'attributes'</span>][input_columns[<span class="num">1</span>]].<span class="fn">max</span>()
+y_range = y_max - y_min; y_min -= <span class="num">0.1</span>*y_range; y_max += <span class="num">0.1</span>*y_range
+xx, yy = np.<span class="fn">meshgrid</span>(np.<span class="fn">arange</span>(x_min,x_max,<span class="num">.01</span>*x_range),
+                      np.<span class="fn">arange</span>(y_min,y_max,<span class="num">.01</span>*y_range))
+z = knc.<span class="fn">predict</span>(<span class="fn">list</span>(<span class="fn">zip</span>(xx.<span class="fn">ravel</span>(),yy.<span class="fn">ravel</span>())))
+z = z.<span class="fn">reshape</span>(xx.shape)
+
+plt.<span class="fn">figure</span>(figsize=[<span class="num">12</span>,<span class="num">8</span>])
+plt.<span class="fn">pcolormesh</span>(xx, yy, z, cmap=cm_light)
+plt.<span class="fn">scatter</span>(x_train[input_columns[<span class="num">0</span>]], x_train[input_columns[<span class="num">1</span>]],
+            c=y_train, label=<span class="str">'Training data'</span>, cmap=cm_dark, edgecolor=<span class="str">'black'</span>, linewidth=<span class="num">1</span>, s=<span class="num">150</span>)
+plt.<span class="fn">scatter</span>(x_test[input_columns[<span class="num">0</span>]],  x_test[input_columns[<span class="num">1</span>]],
+            c=y_test, marker=<span class="str">'*'</span>, label=<span class="str">'Testing data'</span>, cmap=cm_dark, edgecolor=<span class="str">'black'</span>, linewidth=<span class="num">1</span>, s=<span class="num">150</span>)
+plt.<span class="fn">xlabel</span>(input_columns[<span class="num">0</span>]); plt.<span class="fn">ylabel</span>(input_columns[<span class="num">1</span>]); plt.<span class="fn">legend</span>()</pre></div>
+<div class="manual-task"><div class="mn-label">// Task</div>Create a loop to compare accuracy at different values of k. Show a graph with k on the horizontal axis and accuracy on the vertical axis.</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">KNN — Regression</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">from</span> sklearn.neighbors <span class="kw">import</span> KNeighborsRegressor
+knr = <span class="cls">KNeighborsRegressor</span>(<span class="num">5</span>)
+
+input_columns = [<span class="str">'age'</span>, <span class="str">'bmi'</span>]
+x_train = diabetes[<span class="str">'train'</span>][<span class="str">'attributes'</span>][input_columns]
+y_train = diabetes[<span class="str">'train'</span>][<span class="str">'target'</span>].diseaseProgression
+knr.<span class="fn">fit</span>(x_train, y_train)
+
+x_test    = diabetes[<span class="str">'test'</span>][<span class="str">'attributes'</span>][input_columns]
+y_test    = diabetes[<span class="str">'test'</span>][<span class="str">'target'</span>].diseaseProgression
+y_predict = knr.<span class="fn">predict</span>(x_test)
+
+<span class="fn">print</span>(pd.<span class="fn">DataFrame</span>(<span class="fn">list</span>(<span class="fn">zip</span>(y_test,y_predict)), columns=[<span class="str">'target'</span>,<span class="str">'predicted'</span>]))
+<span class="fn">print</span>(<span class="str">f'Accuracy: {knr.score(x_test, y_test):.4f}'</span>)
+
+dia_cm = cm.<span class="fn">get_cmap</span>(<span class="str">'Reds'</span>)
+<span class="cm"># (calculate meshgrid same as classification, then:)</span>
+plt.<span class="fn">figure</span>()
+plt.<span class="fn">pcolormesh</span>(xx, yy, z, cmap=dia_cm)
+plt.<span class="fn">scatter</span>(x_train[input_columns[<span class="num">0</span>]], x_train[input_columns[<span class="num">1</span>]],
+            c=y_train, label=<span class="str">'Training data'</span>, cmap=dia_cm, edgecolor=<span class="str">'black'</span>, linewidth=<span class="num">1</span>, s=<span class="num">150</span>)
+plt.<span class="fn">scatter</span>(x_test[input_columns[<span class="num">0</span>]],  x_test[input_columns[<span class="num">1</span>]],
+            c=y_test, marker=<span class="str">'*'</span>, label=<span class="str">'Testing data'</span>, cmap=dia_cm, edgecolor=<span class="str">'black'</span>, linewidth=<span class="num">1</span>, s=<span class="num">150</span>)
+plt.<span class="fn">legend</span>(); plt.<span class="fn">colorbar</span>()</pre></div>
+<div class="manual-task"><div class="mn-label">// Task</div>Create a loop to compare accuracy at different values of k. Show a graph with k on the horizontal axis and accuracy on the vertical axis.</div>
+</div>`,
+
+'lab8': `
+<div class="manual-section">
+<div class="manual-sec-title">Objective</div>
+<div class="manual-prose">To perform the <strong>CART decision tree</strong> learning algorithm using scikit-learn for classification and regression, and to understand the overfitting problem.</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Classification</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">from</span> sklearn.tree <span class="kw">import</span> DecisionTreeClassifier, plot_tree
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+dtc = <span class="cls">DecisionTreeClassifier</span>(criterion=<span class="str">'gini'</span>)
+dtc.<span class="fn">fit</span>(iris[<span class="str">'train'</span>][<span class="str">'attributes'</span>], iris[<span class="str">'train'</span>][<span class="str">'target'</span>])
+predicts = dtc.<span class="fn">predict</span>(iris[<span class="str">'test'</span>][<span class="str">'attributes'</span>])
+
+<span class="fn">print</span>(pd.<span class="fn">DataFrame</span>(<span class="fn">list</span>(<span class="fn">zip</span>(iris[<span class="str">'test'</span>][<span class="str">'target'</span>].species, predicts)),
+                   columns=[<span class="str">'target'</span>,<span class="str">'predicted'</span>]))
+accuracy = dtc.<span class="fn">score</span>(iris[<span class="str">'test'</span>][<span class="str">'attributes'</span>], iris[<span class="str">'test'</span>][<span class="str">'target'</span>].species)
+<span class="fn">print</span>(<span class="str">f'Accuracy: {accuracy:.4f}'</span>)
+
+plt.<span class="fn">figure</span>(figsize=[<span class="num">10</span>,<span class="num">10</span>])
+<span class="fn">plot_tree</span>(dtc,
+  feature_names=iris[<span class="str">'attributes'</span>].columns.<span class="fn">tolist</span>(),
+  class_names=iris[<span class="str">'targetNames'</span>],
+  filled=<span class="kw">True</span>, rounded=<span class="kw">True</span>)</pre></div>
+<div class="manual-task"><div class="mn-label">// Task</div>Create a loop to compare accuracy at max_depth = 1, 2, 3, 5, 7, and 20. Calculate both training and testing accuracy per depth. Show on a single graph — two lines (train vs test).</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Decision Surface Visualisation</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="cm"># Use 2 features: sepal length and sepal width</span>
+dtc = <span class="cls">DecisionTreeClassifier</span>()
+input_cols = iris[<span class="str">'train'</span>][<span class="str">'attributes'</span>].columns[:<span class="num">2</span>].<span class="fn">tolist</span>()
+dtc.<span class="fn">fit</span>(iris[<span class="str">'train'</span>][<span class="str">'attributes'</span>][input_cols],
+       iris[<span class="str">'train'</span>][<span class="str">'target'</span>].species)
+
+<span class="cm"># Calculate decision surface (same meshgrid approach as Lab 7)</span>
+<span class="cm"># Then compare: unlimited depth vs max_depth=3 → observe overfitting</span>
+dtc_pruned = <span class="cls">DecisionTreeClassifier</span>(max_depth=<span class="num">3</span>)
+dtc_pruned.<span class="fn">fit</span>(iris[<span class="str">'train'</span>][<span class="str">'attributes'</span>][input_cols],
+              iris[<span class="str">'train'</span>][<span class="str">'target'</span>].species)</pre></div>
+<div class="manual-note"><div class="mn-label">// Overfitting</div>Though the training accuracy of the pruned model is lower, its testing accuracy is higher — demonstrating better <strong>generalisation</strong>.</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Regression</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">from</span> sklearn.tree <span class="kw">import</span> DecisionTreeRegressor
+dtr = <span class="cls">DecisionTreeRegressor</span>()
+dtr.<span class="fn">fit</span>(diabetes[<span class="str">'train'</span>][<span class="str">'attributes'</span>], diabetes[<span class="str">'train'</span>][<span class="str">'target'</span>])
+predicts = dtr.<span class="fn">predict</span>(diabetes[<span class="str">'test'</span>][<span class="str">'attributes'</span>])
+accuracy = dtr.<span class="fn">score</span>(diabetes[<span class="str">'test'</span>][<span class="str">'attributes'</span>],
+                      diabetes[<span class="str">'test'</span>][<span class="str">'target'</span>].diseaseProgression)
+<span class="fn">print</span>(<span class="str">f'Accuracy: {accuracy:.4f}'</span>)
+
+plt.<span class="fn">figure</span>(figsize=[<span class="num">10</span>,<span class="num">10</span>])
+<span class="fn">plot_tree</span>(dtr,
+  feature_names=diabetes[<span class="str">'attributes'</span>].columns.<span class="fn">tolist</span>(),
+  filled=<span class="kw">True</span>, rounded=<span class="kw">True</span>)</pre></div>
+<div class="manual-task"><div class="mn-label">// Task</div>Same as classification: loop max_depth = 1, 2, 3, 5, 7, 20. Plot train vs test accuracy. Demonstrate overfitting by comparing unlimited vs max_depth=3.</div>
+</div>`,
+
+'lab9': `
+<div class="manual-section">
+<div class="manual-sec-title">Objectives</div>
+<div class="manual-steps">
+<div class="manual-step"><div class="ms-num">1.</div><div class="ms-text">To implement <strong>k-means clustering</strong> algorithm using basic Python.</div></div>
+<div class="manual-step"><div class="ms-num">2.</div><div class="ms-text">To perform k-means clustering with the <code>scikit-learn</code> Python library.</div></div>
+</div>
+<div class="manual-note"><div class="mn-label">// Note</div>Use the <code>numpy</code> library to simplify distance calculations.</div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">Dataset</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">from</span> sklearn.datasets <span class="kw">import</span> make_blobs
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+data   = <span class="fn">make_blobs</span>(n_samples=<span class="num">200</span>, n_features=<span class="num">2</span>,
+                     centers=<span class="num">4</span>, cluster_std=<span class="num">1.6</span>, random_state=<span class="num">50</span>)
+points = data[<span class="num">0</span>]
+plt.<span class="fn">scatter</span>(data[<span class="num">0</span>][:,<span class="num">0</span>], data[<span class="num">0</span>][:,<span class="num">1</span>], c=data[<span class="num">1</span>])</pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">k-Means from Scratch</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">def</span> <span class="fn">get_random_centroids</span>(data_points, n_centroids=<span class="num">2</span>):
+  <span class="cm"># randomly identify n_centroids from data_points</span>
+  <span class="cm"># return centroids and remaining points</span>
+  <span class="kw">pass</span>
+
+<span class="kw">def</span> <span class="fn">group_to_centroids</span>(data_points, centroids):
+  <span class="cm"># calculate distance of every point from each centroid</span>
+  <span class="cm"># return index of nearest centroid for each point</span>
+  <span class="kw">pass</span>
+
+<span class="kw">def</span> <span class="fn">find_centroids</span>(data_points, groups):
+  <span class="cm"># calculate new centroids as mean of each group</span>
+  <span class="kw">pass</span>
+
+centroids, others = <span class="fn">get_random_centroids</span>(points, <span class="num">4</span>)
+
+fig = plt.<span class="fn">figure</span>()
+ax  = fig.<span class="fn">add_subplot</span>(<span class="num">111</span>)
+
+<span class="kw">while</span> <span class="cm"># centroids not stabilised:</span>
+  groups    = <span class="fn">group_to_centroids</span>(others, centroids)
+  centroids = <span class="fn">find_centroids</span>(others, groups)
+  ax.<span class="fn">clear</span>()
+  ax.<span class="fn">scatter</span>(others[:,<span class="num">0</span>],    others[:,<span class="num">1</span>],    c=groups)
+  ax.<span class="fn">scatter</span>(centroids[:,<span class="num">0</span>], centroids[:,<span class="num">1</span>], marker=<span class="str">'*'</span>, c=<span class="str">'k'</span>)
+  plt.<span class="fn">pause</span>(<span class="num">1</span>)
+<span class="fn">print</span>(<span class="str">'terminated'</span>)</pre></div>
+</div>
+<div class="manual-section">
+<div class="manual-sec-title">k-Means using scikit-learn</div>
+<div class="code-block"><div class="code-header"><div class="code-lang">PYTHON</div><button class="code-copy" onclick="copyCode(this)">copy</button></div>
+<pre><span class="kw">from</span> sklearn.cluster <span class="kw">import</span> KMeans
+
+kmeans = <span class="cls">KMeans</span>(n_clusters=<span class="num">4</span>)
+kmeans.<span class="fn">fit</span>(points)
+y_km = kmeans.<span class="fn">fit_predict</span>(points)
+
+plt.<span class="fn">figure</span>()
+plt.<span class="fn">scatter</span>(points[:,<span class="num">0</span>], points[:,<span class="num">1</span>], c=y_km)
+plt.<span class="fn">scatter</span>(kmeans.cluster_centers_[:,<span class="num">0</span>],
+            kmeans.cluster_centers_[:,<span class="num">1</span>], c=<span class="str">'k'</span>, marker=<span class="str">'*'</span>, s=<span class="num">200</span>)</pre></div>
+<div class="manual-task"><div class="mn-label">// Task</div>Compare the results of the two methods — are the clusters similar?</div>
+</div>`
+
+}; // end LAB_MANUALS
+
+function renderManualContent(lab) {
+  const container = document.getElementById('manual-content');
+  const html = LAB_MANUALS[lab.id];
+  if (!html) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px 0;color:var(--muted)">
+        <div style="font-size:28px;margin-bottom:10px">🔗</div>
+        <div style="font-size:12px">No manual content available for this lab.<br>
+        <a href="${lab.src}" target="_blank" style="color:var(--clo1)">View on yteoh12.github.io ↗</a></div>
+      </div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div style="margin-bottom:16px;padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:18px">📖</span>
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text)">Lab ${lab.num}: ${lab.title}</div>
+        <div style="font-size:10px;color:var(--muted2)">Source: <a href="${lab.src}" target="_blank" style="color:var(--clo1)">${lab.src}</a></div>
+      </div>
+    </div>
+    ${html}`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
